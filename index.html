@@ -73,18 +73,20 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .tabs{display:flex;gap:6px;padding:5px 10px;background:var(--card);border-bottom:1px solid var(--line)}
 .tabs .chip{flex:1;text-align:center;border-radius:10px;min-height:38px;padding:6px 4px;font-size:14px}
 .gbody{flex:1;min-height:0;display:flex;flex-direction:column}
-.gmain{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.gmain{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
 .tsbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px}
 .tsbar .btn{min-height:34px;padding:4px 12px;font-size:14px;text-decoration:none;color:inherit}
 #tsframe{display:block;width:100%;height:calc(100% - 48px);border:0;background:#fff}
 .lurow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px 0;font-size:14px}
 .lurow .btn{min-height:34px;padding:4px 12px;font-size:14px}
-.pgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:6px 8px 8px}
-.pc{background:var(--card);border:2px solid var(--line);border-radius:12px;min-height:60px;padding:3px 2px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.15}
-.pc b{font-size:22px;font-weight:800}
-.pc span{font-weight:700;font-size:12px;letter-spacing:-.2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(84px,1fr);gap:8px;padding:8px;flex:1 0 auto}
+.pgrid.many{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(66px,1fr)}
+.pc{background:var(--card);border:2px solid var(--line);border-radius:14px;min-height:64px;max-height:150px;padding:4px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.15}
+.pc b{font-size:34px;font-weight:800;line-height:1}
+.pc span{font-weight:700;font-size:16px;letter-spacing:-.2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgrid.many .pc b{font-size:28px}.pgrid.many .pc span{font-size:14px}
 .pc small{display:none;font-size:12px;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pc i{font-style:normal;font-size:10px;color:var(--mut);margin-top:1px;min-height:12px}
+.pc i{font-style:normal;font-size:12px;color:var(--mut);margin-top:1px;min-height:12px}
 .pc.sel{background:var(--sel);border-color:var(--sel);color:var(--bg)}
 .pc.sel small,.pc.sel i{color:var(--bg);opacity:.8}
 .acts{background:var(--card);border-top:1px solid var(--line);padding:8px 8px max(8px,env(safe-area-inset-bottom))}
@@ -101,7 +103,7 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .ab:active{filter:brightness(.8);transform:scale(.98)}
 .ab.ok{background:var(--ok)}.ab.bad{background:var(--bad)}.ab.mid{background:var(--mid)}.ab.ace{background:var(--ace)}
 .acts.off .ab{opacity:.45}
-@media (min-width:820px){.gbody{flex-direction:row}.acts{width:420px;flex:none;border-top:0;border-left:1px solid var(--line);overflow:auto}.ab{height:72px;font-size:18px}.pgrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;padding:8px}.pc{min-height:76px}.pc small{display:block}.pc span{font-size:14px}.pc b{font-size:26px}}
+@media (min-width:820px){.gbody{flex-direction:row}.acts{width:420px;flex:none;border-top:0;border-left:1px solid var(--line);overflow:auto}.ab{height:72px;font-size:18px}.pgrid,.pgrid.many{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));grid-auto-rows:auto;flex:none;align-content:start}.pc{min-height:76px}.pgrid.many .pc b{font-size:26px}.pgrid.many .pc span{font-size:14px}.pc small{display:block}.pc span{font-size:14px}.pc b{font-size:26px}}
 /* stats */
 .tw{overflow:auto;padding:8px}
 table.st{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -326,6 +328,7 @@ function calc(c) {
     rec, recGood: g0(c, 'rec_good'), recMid: g0(c, 'rec_mid'), recErr: g0(c, 'rec_err'),
     recPct: rec ? Math.round(g0(c, 'rec_good') / rec * 100) : null,
     // +/-: pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe)
+    pts: g0(c, 'pt') + g0(c, 'srv_ace') + g0(c, 'blk'),
     pm: g0(c, 'pt') + g0(c, 'srv_ace') + g0(c, 'blk') - (g0(c, 'err') + g0(c, 'srv_err') + g0(c, 'net') + g0(c, 'rec_err'))
   };
 }
@@ -344,21 +347,21 @@ function statTable(rows, { games } = {}) {
   let tot = {}; rows.forEach(r => { tot = addC(tot, r.c); });
   const cell = (c, name) => {
     const x = calc(c);
-    return `<td class="${x.pm > 0 ? 'v-ok' : x.pm < 0 ? 'v-bad' : ''}"><b>${fmtPM(x.pm)}</b></td><td class="g">${x.srv}</td><td>${x.srvOk}</td><td class="${x.ace ? 'v-ace' : ''}">${x.ace}</td><td class="${x.srvErr ? 'v-bad' : ''}">${x.srvErr}</td><td>${pct(x.srvPct)}</td>
+    return `<td><b>${x.pts}</b></td><td class="${x.pm > 0 ? 'v-ok' : x.pm < 0 ? 'v-bad' : ''}"><b>${fmtPM(x.pm)}</b></td><td class="g">${x.srv}</td><td>${x.srvOk}</td><td class="${x.ace ? 'v-ace' : ''}">${x.ace}</td><td class="${x.srvErr ? 'v-bad' : ''}">${x.srvErr}</td><td>${pct(x.srvPct)}</td>
       <td class="g ${x.pt ? 'v-ok' : ''}">${x.pt}</td><td class="${x.err ? 'v-bad' : ''}">${x.err}</td>
       <td class="g ${x.blk ? 'v-ok' : ''}">${x.blk}</td><td class="${x.net ? 'v-bad' : ''}">${x.net}</td>
       <td class="g">${x.rec}</td><td class="${x.recGood ? 'v-ok' : ''}">${x.recGood}</td><td>${x.recMid}</td><td class="${x.recErr ? 'v-bad' : ''}">${x.recErr}</td><td>${pct(x.recPct)}</td>`;
   };
   return `<div class="tw"><table class="st"><thead>
-    <tr><th class="n" rowspan="2">Pelaaja</th>${games ? '<th rowspan="2">Pelit</th>' : ''}<th rowspan="2">+/−</th><th class="g" colspan="5">Syöttö</th><th class="g" colspan="2">Hyökkäys</th><th class="g" colspan="2">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
+    <tr><th class="n" rowspan="2">Pelaaja</th>${games ? '<th rowspan="2">Pelit</th>' : ''}<th rowspan="2">Pist.</th><th rowspan="2">+/−</th><th class="g" colspan="5">Syöttö</th><th class="g" colspan="2">Hyökkäys</th><th class="g" colspan="2">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
     <tr><th class="g">Yht</th><th>Onn.</th><th>Ässä</th><th>Virh.</th><th>%</th><th class="g">Piste</th><th>Virhe</th><th class="g">Torjunta</th><th>Verkkovirhe</th><th class="g">Yht</th><th>Hyvä</th><th>Kesk. ei mahd.</th><th>Virh.</th><th>%</th></tr></thead>
     <tbody>${rows.map(r => `<tr><td class="n"><b>${esc(r.p.num)}</b> ${esc(r.p.name)}</td>${games ? `<td>${games[r.p.id] || 0}</td>` : ''}${cell(r.c)}</tr>`).join('')}</tbody>
     <tfoot><tr><td class="n">Yhteensä</td>${games ? '<td></td>' : ''}${cell(tot)}</tr></tfoot></table></div>
-    <div class="note">Syöttö-% = (onnistui + ässä) / kaikki syötöt. Vastaanotto-% = hyvät / kaikki vastaanotot. “Kesk. ei mahd.” = keskihyökkäys ei mahdollinen. +/− = pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe).</div>`;
+    <div class="note">Pist. = hyökkäyspisteet + ässät + torjunnat. Syöttö-% = (onnistui + ässä) / kaikki syötöt. Vastaanotto-% = hyvät / kaikki vastaanotot. “Kesk. ei mahd.” = keskihyökkäys ei mahdollinen. +/− = pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe).</div>`;
 }
 function downloadCSV(name, rows, games) {
-  const head = ['Numero', 'Pelaaja', ...(games ? ['Pelit'] : []), '+/-', 'Syötöt', 'Onnistui', 'Syöttövirhe', 'Ässä', 'Syöttö-%', 'Hyökkäyspisteet', 'Hyökkäysvirheet', 'Torjunnat', 'Verkkovirheet', 'Vastaanotot', 'Hyvä', 'Keskihyökkäys ei mahdollinen', 'Vastaanottovirhe', 'Vastaanotto-%'];
-  const lines = [head, ...rows.map(r => { const x = calc(r.c); return [r.p.num, r.p.name, ...(games ? [games[r.p.id] || 0] : []), x.pm, x.srv, x.srvOk, x.srvErr, x.ace, x.srvPct ?? '', x.pt, x.err, x.blk, x.net, x.rec, x.recGood, x.recMid, x.recErr, x.recPct ?? '']; })];
+  const head = ['Numero', 'Pelaaja', ...(games ? ['Pelit'] : []), 'Pisteet', '+/-', 'Syötöt', 'Onnistui', 'Syöttövirhe', 'Ässä', 'Syöttö-%', 'Hyökkäyspisteet', 'Hyökkäysvirheet', 'Torjunnat', 'Verkkovirheet', 'Vastaanotot', 'Hyvä', 'Keskihyökkäys ei mahdollinen', 'Vastaanottovirhe', 'Vastaanotto-%'];
+  const lines = [head, ...rows.map(r => { const x = calc(r.c); return [r.p.num, r.p.name, ...(games ? [games[r.p.id] || 0] : []), x.pts, x.pm, x.srv, x.srvOk, x.srvErr, x.ace, x.srvPct ?? '', x.pt, x.err, x.blk, x.net, x.rec, x.recGood, x.recMid, x.recErr, x.recPct ?? '']; })];
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   a.download = name.replace(/[^\wåäöÅÄÖ.-]+/g, '_') + '.csv'; document.body.appendChild(a); a.click(); a.remove();
@@ -572,7 +575,7 @@ function updateGame() {
     const act2 = new Set(Object.keys(g.tot || {}).filter(pid => sumC(g.tot[pid]) > 0));
     const ps = (team?.players || []).filter(p => (!p.hidden && !(g.absent || []).includes(p.id)) || act2.has(p.id)).sort(byNum);
     const roster = (team?.players || []).filter(p => !p.hidden), here = roster.filter(p => !(g.absent || []).includes(p.id)).length;
-    main.innerHTML = ps.length ? `<div class="lurow"><span>Mukana <b>${here}/${roster.length}</b> pelaajaa</span><button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid">${ps.map(p => {
+    main.innerHTML = ps.length ? `<div class="lurow"><span>Mukana <b>${here}/${roster.length}</b> pelaajaa</span><button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid${ps.length>12?' many':''}">${ps.map(p => {
       const c = g.tot?.[p.id], x = calc(c), meta = sumC(c) ? `S${x.srv} P${x.pt} V${x.rec}` : '';
       return `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${esc(firstname(p.name))}</small><i>${meta}</i></button>`;
     }).join('')}</div>` : `<div class="wrap mut">Ei pelaajia. Lisää pelaajat etusivun “Pelaajat”-napista tai valikon kautta valitse kokoonpano.</div>`;
