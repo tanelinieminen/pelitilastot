@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1257d6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%231257d6'/%3E%3Cpath d='M3 12c8 0 14 5 14 18M29 12C21 12 15 17 15 2' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E">
+<title>Pelitilastot</title>
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--ink:#14181f;--mut:#5b6472;--line:#d6dae1;--pri:#1257d6;--pri-ink:#fff;--ok:#0f7a56;--bad:#c42b2b;--mid:#a85f00;--ace:#6b3fd0;--sel:#14181f}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#181c23;--ink:#eef0f4;--mut:#9aa3b2;--line:#2c323d;--pri:#4b86f5;--pri-ink:#fff;--ok:#1a9a70;--bad:#e0504f;--mid:#c47a10;--ace:#8a62ea;--sel:#eef0f4}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:manipulation;overscroll-behavior:none}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;touch-action:manipulation}
+#app{height:100%}
+.hide{display:none!important}
+.top{display:flex;align-items:center;gap:8px;padding:6px 10px;padding-top:max(8px,env(safe-area-inset-top));background:var(--card);border-bottom:1px solid var(--line)}
+.top .ttl{flex:1;min-width:0;font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sub{font-weight:400;font-size:12px;color:var(--mut);display:block}
+.ib{background:transparent;border:1px solid var(--line);border-radius:10px;min-width:42px;height:42px;font-size:20px;color:var(--ink)}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-weight:600;min-height:48px}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn[disabled]{opacity:.45}
+.wrap{padding:12px;max-width:760px;margin:0 auto}
+.page{height:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:600;min-height:40px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0}
+.grow{flex:1}
+.mut{color:var(--mut)}
+.small{font-size:13px}
+h2{font-size:15px;margin:16px 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+input[type=text],input[type=tel],input[type=date],textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--bg);min-height:46px}
+textarea{min-height:110px;resize:vertical}
+label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+.gitem{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.gitem b{font-size:17px}
+.gitem.fx{display:flex;align-items:center;gap:10px}
+.pill{flex:none;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px}
+.pill.pri{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
+#net{position:fixed;right:8px;bottom:8px;z-index:50;background:#b42318;color:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+#toast{position:fixed;left:50%;transform:translateX(-50%);top:42%;z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:16px;max-width:92vw;opacity:0;pointer-events:none;transition:opacity .12s}
+#toast.show{opacity:.97}
+#toast.t-bad{background:var(--bad);color:#fff}#toast.t-ok{background:var(--ok);color:#fff}#toast.t-ace{background:var(--ace);color:#fff}#toast.t-mid{background:var(--mid);color:#fff}
+.banner{background:#fff4d6;color:#5c3d00;border-bottom:1px solid #f0d58a;padding:8px 12px;font-size:13px}
+/* modal */
+#modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center}
+#modal.open{display:flex}
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:92dvh;overflow:auto;border-radius:18px 18px 0 0;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+@media (min-width:700px){#modal{align-items:center}.sheet{border-radius:18px}}
+.sheet h3{margin:0 0 10px;font-size:19px}
+.sheet .btns{display:flex;gap:8px;margin-top:14px}
+.sheet .btns .btn{flex:1}
+.prow{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.prow input:first-child{width:62px;flex:none}
+.prow .btn{min-height:46px;padding:0 12px}
+/* game */
+.gscreen{height:100%;display:flex;flex-direction:column}
+.bar{display:flex;gap:8px;padding:6px 10px;align-items:center;background:var(--card);border-bottom:1px solid var(--line)}
+.setc{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none}
+.setc button{background:transparent;width:42px;height:40px;font-size:20px;color:var(--ink)}
+.setc span{min-width:62px;text-align:center;font-weight:800}
+.setbtn{flex:none;height:40px;border-radius:10px;border:1px solid var(--pri);background:var(--card);padding:0 12px;font-weight:800;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.setbtn small{font-weight:700;font-size:12px;color:var(--pri)}
+.undo{flex:1;min-width:0;height:40px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-weight:600;font-size:14px;padding:0 10px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:6px;padding:5px 10px;background:var(--card);border-bottom:1px solid var(--line)}
+.tabs .chip{flex:1;text-align:center;border-radius:10px;min-height:38px;padding:6px 4px;font-size:14px}
+.gbody{flex:1;min-height:0;display:flex;flex-direction:column}
+.gmain{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.tsbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px}
+.tsbar .btn{min-height:34px;padding:4px 12px;font-size:14px;text-decoration:none;color:inherit}
+#tsframe{display:block;width:100%;height:calc(100% - 48px);border:0;background:#fff}
+.lurow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px 0;font-size:14px}
+.lurow .btn{min-height:34px;padding:4px 12px;font-size:14px}
+.pgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:6px 8px 8px}
+.pc{background:var(--card);border:2px solid var(--line);border-radius:12px;min-height:60px;padding:3px 2px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.15}
+.pc b{font-size:22px;font-weight:800}
+.pc span{font-weight:700;font-size:12px;letter-spacing:-.2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc small{display:none;font-size:12px;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc i{font-style:normal;font-size:10px;color:var(--mut);margin-top:1px;min-height:12px}
+.pc.sel{background:var(--sel);border-color:var(--sel);color:var(--bg)}
+.pc.sel small,.pc.sel i{color:var(--bg);opacity:.8}
+.acts{background:var(--card);border-top:1px solid var(--line);padding:8px 8px max(8px,env(safe-area-inset-bottom))}
+.selline{font-weight:800;font-size:16px;padding:0 4px 4px;min-height:30px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.selline>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl{max-width:80%;overflow:hidden;text-overflow:ellipsis;flex:none;font-style:normal;font-size:14px;color:#fff;border-radius:8px;padding:4px 10px;white-space:nowrap}
+.fl.t-ok{background:var(--ok)}.fl.t-bad{background:var(--bad)}.fl.t-ace{background:var(--ace)}.fl.t-mid{background:var(--mid)}
+.selline.none{color:var(--mut);font-weight:600}
+.arow{display:flex;gap:6px;margin-top:5px}
+.arow .lbl{width:76px;flex:none;font-size:12px;font-weight:700;color:var(--mut);display:flex;align-items:center}
+.ab{flex:1;height:48px;border-radius:12px;color:#fff;font-weight:800;font-size:16px;line-height:1.05;padding:0 4px}
+.ab.wide{flex:1.7;font-size:14px}
+@media (min-width:820px){.ab.wide{font-size:17px}}
+.ab:active{filter:brightness(.8);transform:scale(.98)}
+.ab.ok{background:var(--ok)}.ab.bad{background:var(--bad)}.ab.mid{background:var(--mid)}.ab.ace{background:var(--ace)}
+.acts.off .ab{opacity:.45}
+@media (min-width:820px){.gbody{flex-direction:row}.acts{width:420px;flex:none;border-top:0;border-left:1px solid var(--line);overflow:auto}.ab{height:72px;font-size:18px}.pgrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;padding:8px}.pc{min-height:76px}.pc small{display:block}.pc span{font-size:14px}.pc b{font-size:26px}}
+/* stats */
+.tw{overflow:auto;padding:8px}
+table.st{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table.st th,table.st td{padding:8px 7px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
+table.st th{background:var(--bg);font-size:12px;color:var(--mut)}
+table.st td.n,table.st th.n{text-align:left;position:sticky;left:0;background:var(--card);z-index:1;border-right:1px solid var(--line)}
+table.st th.n{background:var(--bg)}
+table.st .g{border-left:2px solid var(--line)}
+table.st tfoot td{font-weight:800;background:var(--bg)}
+table.st td.v-ok{color:var(--ok);font-weight:700}table.st td.v-bad{color:var(--bad);font-weight:700}table.st td.v-ace{color:var(--ace);font-weight:700}
+.evl{padding:0 10px 14px}
+.ev{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:6px;min-height:52px;font-size:15px}
+.evl div{padding:7px 4px;border-bottom:1px solid var(--line);font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.note{font-size:12px;color:var(--mut);padding:2px 12px 10px}
+</style>
+<script src="firebase-config.js"></script>
+<script src="joukkueet.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="net" class="hide">Ei verkkoyhteyttä – kirjaukset tallentuvat, kun yhteys palaa</div>
+
+<script type="module">
+/* =========================================================
+   Perusapurit
+   ========================================================= */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} }
+};
+const uid = () => Math.random().toString(36).slice(2, 10);
+const pad = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const fmtDate = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${+m[3]}.${+m[2]}.${m[1]}` : (s || ''); };
+const num = p => parseInt(p.num, 10);
+const byNum = (a, b) => (num(a) || 999) - (num(b) || 999) || a.name.localeCompare(b.name, 'fi');
+const surname = n => (n || '').trim().split(/\s+/)[0] || '';
+const firstname = n => (n || '').trim().split(/\s+/).slice(1).join(' ');
+function setPath(o, path, val) { const k = path.split('.'); let c = o; for (const x of k.slice(0, -1)) c = (c[x] ??= {}); c[k.at(-1)] = val; }
+function resInfo(g) {
+  const parts = []; let w = 0, l = 0;
+  for (const k of Object.keys(g.res || {}).sort()) { const r = g.res[k]; if (r.us != null && r.opp != null) { parts.push(`${r.us}–${r.opp}`); if (r.us > r.opp) w++; else if (r.us < r.opp) l++; } }
+  return { w, l, parts, any: parts.length > 0 };
+}
+const resTxt = g => { const r = resInfo(g); return r.any ? `${r.w}–${r.l} (${r.parts.join(', ')})` : ''; };
+const normName = n => (n || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+const TYPES = ['srv_ok', 'srv_err', 'srv_ace', 'pt', 'err', 'blk', 'net', 'rec_good', 'rec_mid', 'rec_err'];
+const LABEL = { srv_ok: 'Syöttö onnistui', srv_err: 'Syöttövirhe', srv_ace: 'Ässä', pt: 'Hyökkäys', err: 'Virhe', blk: 'Torjunta', net: 'Verkkovirhe', rec_good: 'Vastaanotto hyvä', rec_mid: 'Vastaanotto: keskihyökkäys ei mahdollinen', rec_err: 'Vastaanottovirhe' };
+const TONE = { srv_ok: 'ok', srv_err: 'bad', srv_ace: 'ace', pt: 'ace', err: 'bad', blk: 'ok', net: 'bad', rec_good: 'ok', rec_mid: 'mid', rec_err: 'bad' };
+const ACTIONS = [
+  { grp: 'Syöttö', items: [['srv_ok', 'Onnistui'], ['srv_ace', 'Ässä'], ['srv_err', 'Virhe']] },
+  { grp: 'Piste/virhe', items: [['pt', 'Hyökkäys'], ['err', 'Virhe']] },
+  { grp: 'Torjunta', items: [['blk', 'Torjunta'], ['net', 'Verkkovirhe']] },
+  { grp: 'Vastaanotto', items: [['rec_good', 'Hyvä'], ['rec_mid', 'Keskihyökkäys ei mahdollinen'], ['rec_err', 'Virhe']] },
+];
+
+/* =========================================================
+   Tila
+   ========================================================= */
+const S = {
+  code: null, name: LS.get('bs_name', ''), devId: LS.get('bs_dev', null),
+  teams: [], teamsLoaded: false, teamId: LS.get('bs_team', null),
+  games: [], game: undefined, events: [], seasonGames: [],
+  sel: null, tab: null, setFilter: 'all', draft: null,
+  subs: [], view: null, teamsUnsub: null
+};
+if (!S.devId) { S.devId = uid() + uid(); LS.set('bs_dev', S.devId); }
+let backend = null;
+const app = $('#app');
+
+/* =========================================================
+   Taustajärjestelmä 1: paikallinen testitila (localStorage)
+   ========================================================= */
+function bump(g, ev, d) {
+  const inc = (keys) => { let o = g; for (const k of keys.slice(0, -1)) o = (o[k] ??= {}); const l = keys.at(-1); o[l] = (o[l] || 0) + d; };
+  inc(['tot', ev.pid, ev.type]); inc(['sets', 's' + ev.set, ev.pid, ev.type]); g.n = (g.n || 0) + d;
+}
+function makeLocal(code) {
+  const key = 'bs_local_' + code;
+  const db = LS.get(key, null) || { teams: {}, games: {}, events: {} };
+  const subs = new Set();
+  const save = () => { LS.set(key, db); [...subs].forEach(f => f()); };
+  const watch = (compute, cb) => { const f = () => cb(structuredClone(compute())); subs.add(f); setTimeout(f, 0); return () => subs.delete(f); };
+  return {
+    local: true,
+    async hasSpace() { return LS.get(key, null) !== null; },
+    async createSpace() { save(); },
+    watchTeams: cb => watch(() => Object.values(db.teams), cb),
+    async saveTeam(t) { t.id = t.id || uid(); db.teams[t.id] = t; save(); return t.id; },
+    watchGames: (tid, cb) => watch(() => Object.values(db.games).filter(g => g.teamId === tid), cb),
+    watchAllGames: (tid, cb) => watch(() => Object.values(db.games).filter(g => g.teamId === tid), cb),
+    watchGame: (gid, cb) => watch(() => db.games[gid] || null, cb),
+    watchEvents: (gid, cb) => watch(() => (db.events[gid] || []).slice(-300).reverse(), cb),
+    async createGame(g) { const id = g.id || uid(); db.games[id] = { ...(db.games[id] || { tot: {}, sets: {}, n: 0 }), ...g, id }; db.events[id] ||= []; save(); return id; },
+    async patchGame(gid, f) { if (db.games[gid]) { for (const [k, v] of Object.entries(f)) setPath(db.games[gid], k, v); save(); } },
+    record(gid, ev) { const g = db.games[gid]; if (!g) return; bump(g, ev, 1); (db.events[gid] ||= []).push({ ...ev, id: uid(), ts: Date.now() }); save(); },
+    undo(gid, ev) { const g = db.games[gid]; if (!g) return; bump(g, ev, -1); db.events[gid] = (db.events[gid] || []).filter(e => e.id !== ev.id); save(); },
+    editEvent(gid, old, neu) { const g = db.games[gid]; if (!g) return; bump(g, old, -1); bump(g, neu, 1); const e = (db.events[gid] || []).find(x => x.id === old.id); if (e) Object.assign(e, { pid: neu.pid, type: neu.type, set: neu.set }); save(); },
+    async deleteGame(gid) { delete db.games[gid]; delete db.events[gid]; save(); }
+  };
+}
+
+/* =========================================================
+   Taustajärjestelmä 2: Firebase Firestore
+   ========================================================= */
+let FB = null;
+async function loadFirebase(cfg) {
+  if (FB) return FB;
+  const V = '10.12.2';
+  const [a, f] = await Promise.all([
+    import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
+    import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`)
+  ]);
+  const fapp = a.initializeApp(cfg);
+  let db;
+  try { db = f.initializeFirestore(fapp, { localCache: f.persistentLocalCache({ tabManager: f.persistentMultipleTabManager() }) }); }
+  catch (e) { console.warn('Offline-välimuisti ei käytössä', e); db = f.getFirestore(fapp); }
+  FB = { f, db };
+  return FB;
+}
+function makeFirestore(code, { f, db }) {
+  const col = (...p) => f.collection(db, 't', code, ...p);
+  const dref = (...p) => f.doc(db, 't', code, ...p);
+  const err = e => { console.error(e); toast('Yhteysvirhe: ' + (e.code || e.message), 'bad', 4000); };
+  const inc = n => f.increment(n);
+  return {
+    local: false,
+    async hasSpace() { return (await f.getDoc(dref('meta', 'info'))).exists(); },
+    async createSpace() { await f.setDoc(dref('meta', 'info'), { created: Date.now() }); },
+    watchTeams: cb => f.onSnapshot(col('teams'), s => cb(s.docs.map(d => ({ ...d.data(), id: d.id })), s.metadata.fromCache), err),
+    async saveTeam(t) {
+      const id = t.id || f.doc(col('teams')).id;
+      f.setDoc(dref('teams', id), { name: t.name, players: t.players, updated: Date.now() }).catch(err);
+      return id;
+    },
+    watchGames: (tid, cb) => f.onSnapshot(f.query(col('games'), f.where('teamId', '==', tid)), s => cb(s.docs.map(d => ({ ...d.data(), id: d.id }))), err),
+    watchAllGames: (tid, cb) => f.onSnapshot(f.query(col('games'), f.where('teamId', '==', tid)), s => cb(s.docs.map(d => ({ ...d.data(), id: d.id }))), err),
+    watchGame: (gid, cb) => f.onSnapshot(dref('games', gid), s => cb(s.exists() ? { ...s.data(), id: s.id } : null), err),
+    watchEvents: (gid, cb) => f.onSnapshot(f.query(col('games', gid, 'events'), f.orderBy('ts', 'desc'), f.limit(300)), s => cb(s.docs.map(d => ({ ...d.data(), id: d.id }))), err),
+    async createGame(g) {
+      const { id, ...data } = g;
+      f.setDoc(dref('games', id), data, { merge: true }).catch(err);   // merge: ei koskaan nollaa jo kirjattuja tilastoja
+      return id;
+    },
+    async patchGame(gid, fields) { f.updateDoc(dref('games', gid), fields).catch(err); },
+    record(gid, ev) {
+      const b = f.writeBatch(db);
+      b.set(f.doc(col('games', gid, 'events')), { ...ev, ts: Date.now() });
+      b.update(dref('games', gid), { [`tot.${ev.pid}.${ev.type}`]: inc(1), [`sets.s${ev.set}.${ev.pid}.${ev.type}`]: inc(1), n: inc(1) });
+      b.commit().catch(err);   // ei odoteta: toimii myös ilman verkkoa
+    },
+    undo(gid, ev) {
+      const b = f.writeBatch(db);
+      b.delete(dref('games', gid, 'events', ev.id));
+      b.update(dref('games', gid), { [`tot.${ev.pid}.${ev.type}`]: inc(-1), [`sets.s${ev.set}.${ev.pid}.${ev.type}`]: inc(-1), n: inc(-1) });
+      b.commit().catch(err);
+    },
+    editEvent(gid, old, neu) {
+      const d = {}, add = (ev, n) => { for (const k of [`tot.${ev.pid}.${ev.type}`, `sets.s${ev.set}.${ev.pid}.${ev.type}`]) d[k] = (d[k] || 0) + n; };
+      add(old, -1); add(neu, 1);
+      const upd = {}; for (const [k, v] of Object.entries(d)) if (v) upd[k] = inc(v);
+      const b = f.writeBatch(db);
+      b.update(dref('games', gid, 'events', old.id), { pid: neu.pid, type: neu.type, set: neu.set });
+      if (Object.keys(upd).length) b.update(dref('games', gid), upd);
+      b.commit().catch(err);
+    },
+    async deleteGame(gid) {
+      const snap = await f.getDocs(col('games', gid, 'events'));
+      for (let i = 0; i < snap.docs.length; i += 400) {
+        const b = f.writeBatch(db);
+        snap.docs.slice(i, i + 400).forEach(d => b.delete(d.ref));
+        await b.commit();
+      }
+      await f.deleteDoc(dref('games', gid));
+    }
+  };
+}
+const useFirebase = () => { const c = window.FIREBASE_CONFIG; return !!(c && c.apiKey && !/TÄYTÄ|YOUR|XXXX/i.test(c.apiKey)); };
+async function initBackend(code) {
+  backend = useFirebase() ? makeFirestore(code, await loadFirebase(window.FIREBASE_CONFIG)) : makeLocal(code);
+}
+
+/* =========================================================
+   UI-apurit: toast, modal, verkkotila, näyttö hereillä
+   ========================================================= */
+let toastT;
+function toast(msg, tone = '', ms = 1300) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show' + (tone ? ' t-' + tone : '');
+  clearTimeout(toastT); toastT = setTimeout(() => { t.className = ''; }, ms);
+}
+const modalEl = $('#modal'), sheet = $('#sheet');
+function openModal(html) { sheet.innerHTML = html; modalEl.classList.add('open'); }
+function closeModal() { modalEl.classList.remove('open'); sheet.innerHTML = ''; S.draft = null; S.edit = null; }
+modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+function confirmModal(text, act, data = '') {
+  openModal(`<h3>${esc(text)}</h3><div class="btns"><button class="btn" data-act="close">Peruuta</button><button class="btn pri" data-act="${act}" data-id="${esc(data)}">OK</button></div>`);
+}
+const setNet = () => $('#net').classList.toggle('hide', navigator.onLine);
+addEventListener('online', setNet); addEventListener('offline', setNet); setNet();
+let wake = null;
+async function keepAwake() { try { if ('wakeLock' in navigator && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.view === 'game') keepAwake(); });
+
+/* =========================================================
+   Tilastolaskenta
+   ========================================================= */
+const g0 = (c, t) => (c && c[t]) || 0;
+const sumC = c => TYPES.reduce((a, t) => a + g0(c, t), 0);
+function calc(c) {
+  const srv = g0(c, 'srv_ok') + g0(c, 'srv_err') + g0(c, 'srv_ace');
+  const rec = g0(c, 'rec_good') + g0(c, 'rec_mid') + g0(c, 'rec_err');
+  return {
+    srv, srvOk: g0(c, 'srv_ok'), srvErr: g0(c, 'srv_err'), ace: g0(c, 'srv_ace'),
+    srvPct: srv ? Math.round((g0(c, 'srv_ok') + g0(c, 'srv_ace')) / srv * 100) : null,
+    pt: g0(c, 'pt'), err: g0(c, 'err'), blk: g0(c, 'blk'), net: g0(c, 'net'),
+    rec, recGood: g0(c, 'rec_good'), recMid: g0(c, 'rec_mid'), recErr: g0(c, 'rec_err'),
+    recPct: rec ? Math.round(g0(c, 'rec_good') / rec * 100) : null,
+    // +/-: pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe)
+    pm: g0(c, 'pt') + g0(c, 'srv_ace') + g0(c, 'blk') - (g0(c, 'err') + g0(c, 'srv_err') + g0(c, 'net') + g0(c, 'rec_err'))
+  };
+}
+const addC = (a, b) => { const o = { ...a }; for (const t of TYPES) if (b && b[t]) o[t] = (o[t] || 0) + b[t]; return o; };
+const pct = v => v === null ? '–' : v + '%';
+const fmtPM = n => n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0';
+function statRows(team, countsByPid) {
+  const ids = new Set(Object.keys(countsByPid).filter(pid => sumC(countsByPid[pid]) > 0));
+  const known = new Map((team?.players || []).map(p => [p.id, p]));
+  const rows = [...ids].map(pid => ({ p: known.get(pid) || { id: pid, num: '', name: '(poistettu pelaaja)' }, c: countsByPid[pid] }));
+  rows.sort((a, b) => byNum(a.p, b.p));
+  return rows;
+}
+function statTable(rows, { games } = {}) {
+  if (!rows.length) return `<div class="note" style="padding:24px 12px">Ei kirjauksia vielä.</div>`;
+  let tot = {}; rows.forEach(r => { tot = addC(tot, r.c); });
+  const cell = (c, name) => {
+    const x = calc(c);
+    return `<td class="${x.pm > 0 ? 'v-ok' : x.pm < 0 ? 'v-bad' : ''}"><b>${fmtPM(x.pm)}</b></td><td class="g">${x.srv}</td><td>${x.srvOk}</td><td class="${x.ace ? 'v-ace' : ''}">${x.ace}</td><td class="${x.srvErr ? 'v-bad' : ''}">${x.srvErr}</td><td>${pct(x.srvPct)}</td>
+      <td class="g ${x.pt ? 'v-ok' : ''}">${x.pt}</td><td class="${x.err ? 'v-bad' : ''}">${x.err}</td>
+      <td class="g ${x.blk ? 'v-ok' : ''}">${x.blk}</td><td class="${x.net ? 'v-bad' : ''}">${x.net}</td>
+      <td class="g">${x.rec}</td><td class="${x.recGood ? 'v-ok' : ''}">${x.recGood}</td><td>${x.recMid}</td><td class="${x.recErr ? 'v-bad' : ''}">${x.recErr}</td><td>${pct(x.recPct)}</td>`;
+  };
+  return `<div class="tw"><table class="st"><thead>
+    <tr><th class="n" rowspan="2">Pelaaja</th>${games ? '<th rowspan="2">Pelit</th>' : ''}<th rowspan="2">+/−</th><th class="g" colspan="5">Syöttö</th><th class="g" colspan="2">Hyökkäys</th><th class="g" colspan="2">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
+    <tr><th class="g">Yht</th><th>Onn.</th><th>Ässä</th><th>Virh.</th><th>%</th><th class="g">Piste</th><th>Virhe</th><th class="g">Torjunta</th><th>Verkkovirhe</th><th class="g">Yht</th><th>Hyvä</th><th>Kesk. ei mahd.</th><th>Virh.</th><th>%</th></tr></thead>
+    <tbody>${rows.map(r => `<tr><td class="n"><b>${esc(r.p.num)}</b> ${esc(r.p.name)}</td>${games ? `<td>${games[r.p.id] || 0}</td>` : ''}${cell(r.c)}</tr>`).join('')}</tbody>
+    <tfoot><tr><td class="n">Yhteensä</td>${games ? '<td></td>' : ''}${cell(tot)}</tr></tfoot></table></div>
+    <div class="note">Syöttö-% = (onnistui + ässä) / kaikki syötöt. Vastaanotto-% = hyvät / kaikki vastaanotot. “Kesk. ei mahd.” = keskihyökkäys ei mahdollinen. +/− = pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe).</div>`;
+}
+function downloadCSV(name, rows, games) {
+  const head = ['Numero', 'Pelaaja', ...(games ? ['Pelit'] : []), '+/-', 'Syötöt', 'Onnistui', 'Syöttövirhe', 'Ässä', 'Syöttö-%', 'Hyökkäyspisteet', 'Hyökkäysvirheet', 'Torjunnat', 'Verkkovirheet', 'Vastaanotot', 'Hyvä', 'Keskihyökkäys ei mahdollinen', 'Vastaanottovirhe', 'Vastaanotto-%'];
+  const lines = [head, ...rows.map(r => { const x = calc(r.c); return [r.p.num, r.p.name, ...(games ? [games[r.p.id] || 0] : []), x.pm, x.srv, x.srvOk, x.srvErr, x.ace, x.srvPct ?? '', x.pt, x.err, x.blk, x.net, x.rec, x.recGood, x.recMid, x.recErr, x.recPct ?? '']; })];
+  const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = name.replace(/[^\wåäöÅÄÖ.-]+/g, '_') + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* =========================================================
+   Reititys
+   ========================================================= */
+function cleanup() { S.subs.forEach(u => { try { u(); } catch {} }); S.subs = []; S.gamesTeam = null; }
+function go(h) { if (location.hash === h) route(); else location.hash = h; }
+addEventListener('hashchange', () => { if (S.code) route(); });
+function route() {
+  cleanup(); closeModal();
+  const h = location.hash.replace(/^#\/?/, '').split('/');
+  app.innerHTML = '';
+  if (h[0] === 'g' && h[1]) return mountGame(h[1]);
+  if (h[0] === 'season' && h[1]) return mountSeason(h[1]);
+  mountHome();
+}
+function refresh() { ({ home: updateHome, game: updateGame, season: updateSeason })[S.view]?.(); }
+
+/* =========================================================
+   Käynnistys: ei kirjautumista, joukkueet esitäytetty (joukkueet.js)
+   ========================================================= */
+const act = {};
+const slug = n => normName(n).replace(/[^a-z0-9åäö]/g, '');
+const seeded = new Set();
+function seedTeams(ts, fromCache) {
+  if (fromCache) return;  // luodaan vain, kun palvelimelta on varmistettu ettei joukkuetta ole
+  for (const t of window.JOUKKUEET || []) {
+    if (seeded.has(t.id) || ts.some(x => x.id === t.id)) continue;
+    seeded.add(t.id);
+    backend.saveTeam({ id: t.id, name: t.name, players: (t.players || []).map(([n, name]) => ({ id: 'p_' + slug(name), num: String(n), name })) });
+  }
+}
+function enter(code) {
+  S.code = code; S.teamsLoaded = false;
+  S.teamsUnsub = backend.watchTeams((ts, fromCache) => {
+    S.teams = ts.sort((a, b) => a.name.localeCompare(b.name, 'fi')); S.teamsLoaded = true;
+    seedTeams(ts, fromCache); refresh();
+  });
+  route();
+  if (!LS.get('bs_name', '')) askName();
+}
+function askName() {
+  openModal(`<h3>Kuka olet?</h3><p class="mut small">Nimi näkyy muille kirjaajana. Kysytään vain kerran.</p>
+    <input type="text" id="setname" placeholder="esim. Taneli" autocomplete="off">
+    <div class="btns"><button class="btn pri" data-act="save-settings">Tallenna</button></div>`);
+}
+
+/* =========================================================
+   Etusivu
+   ========================================================= */
+function curTeam() { return S.teams.find(t => t.id === S.teamId) || S.teams[0] || null; }
+function mountHome() {
+  S.view = 'home';
+  updateHome();
+}
+function subGames(tid) {
+  S.games = []; S.gamesLoaded = false;
+  S.subs.push(backend.watchGames(tid, gs => { S.games = gs; S.gamesLoaded = true; if (S.view === 'home') updateHome(); }));
+}
+function updateHome() {
+  if (S.view !== 'home') return;
+  const t = curTeam();
+  if (t && S.gamesTeam !== t.id) { S.gamesTeam = t.id; subGames(t.id); }
+  const today = todayStr();
+  const fx = (window.OTTELUT || []).filter(o => t && o.team === t.id).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const upcoming = fx.filter(o => o.date >= today);
+  const upIds = new Set(upcoming.map(o => 'm' + o.no));
+  const byId = new Map(S.games.map(g => [g.id, g]));
+  const past = S.games.filter(g => !upIds.has(g.id)).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+  const fxCard = o => {
+    const g = byId.get('m' + o.no);
+    const mine = g && g.rec && g.rec.id === S.devId;
+    const pill = g && g.finished ? 'Avaa' : !g || !g.rec ? (g ? 'Ota kirjaus' : 'Aloita') : mine ? 'Jatka' : 'Katsele';
+    const info = g ? (g.finished ? `Päättynyt${resTxt(g) ? ' ' + esc(resTxt(g)) : ''} · ${g.n || 0} kirjausta` : `${g.n || 0} kirjausta · erä ${g.set || 1}${g.rec ? ' · kirjaaja ' + esc(g.rec.name) : ''}`) : 'ei vielä aloitettu';
+    return `<button class="gitem fx" data-act="fx-open" data-no="${o.no}"><div class="grow"><b>${esc(o.home)} – ${esc(o.away)}</b><div class="mut small">${fmtFx(o)} · ${esc(o.venue)}</div><div class="mut small">${info}</div></div><span class="pill ${mine || !g ? 'pri' : ''}">${pill}</span></button>`;
+  };
+  app.innerHTML = `<div class="page">
+    <div class="top"><div class="ttl">Pelitilastot<span class="sub">JyväsLentis${backend.local ? ' · testitila (ei jaettu)' : ''}</span></div><button class="ib" data-act="settings" aria-label="Asetukset">⚙</button></div>
+    <div class="wrap">
+      <div class="chips" style="margin-bottom:12px">${S.teams.map(x => `<button class="chip ${t && x.id === t.id ? 'on' : ''}" data-act="team-sel" data-id="${x.id}">${esc(x.name)}</button>`).join('')}</div>
+      ${!t ? `<div class="card mut">Ladataan joukkueita…</div>` : `
+      <h2>Tulevat ottelut</h2>
+      ${upcoming.length ? upcoming.map(fxCard).join('') : '<div class="mut">Ei tulevia otteluita tulospalvelussa.</div>'}
+      ${window.OTTELUT_HAETTU ? `<div class="mut small" style="margin:-2px 0 8px">Ottelulista haettu tulospalvelusta ${fmtDate(window.OTTELUT_HAETTU)}</div>` : ''}
+      <div class="row" style="margin-top:10px"><button class="btn grow" data-act="season">Kausitilastot</button><button class="btn grow" data-act="team-edit">Pelaajat (${t.players.filter(p => !p.hidden).length})</button></div>
+      ${past.length ? `<h2>Pelatut ottelut</h2>${past.map(g => `<button class="gitem" data-act="game-open" data-id="${g.id}"><b>${esc(g.home && g.away ? g.home + ' – ' + g.away : g.opponent || 'Peli')}</b><div class="mut small">${fmtDate(g.date)}${g.finished ? ' · päättynyt' : ''}${resTxt(g) ? ' · ' + esc(resTxt(g)) : ''} · ${g.n || 0} kirjausta</div></button>`).join('')}` : ''}`}
+    </div></div>`;
+}
+act['team-sel'] = el => { S.teamId = el.dataset.id; LS.set('bs_team', S.teamId); cleanup(); mountHome(); };
+act['game-open'] = el => go('#/g/' + el.dataset.id);
+act.season = () => go('#/season/' + curTeam().id);
+act.settings = () => openModal(`<h3>Asetukset</h3>
+  <label class="f">Nimesi (näkyy kirjaajana)</label><input type="text" id="setname" value="${esc(S.name)}">
+  <p class="mut small">${backend.local ? 'Testitila: data vain tällä laitteella.' : 'Data tallentuu Firebaseen ja toimii myös ilman verkkoa (synkronoituu myöhemmin).'}</p>
+  <div class="btns"><button class="btn" data-act="close">Peruuta</button><button class="btn pri" data-act="save-settings">Tallenna</button></div>`);
+act['save-settings'] = () => { S.name = $('#setname').value.trim() || 'Kirjaaja'; LS.set('bs_name', S.name); closeModal(); };
+act.close = () => closeModal();
+
+/* ---- Ottelun aloitus: valitaan aina tulevista otteluista ---- */
+const WD = ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'];
+function fmtFx(o) { const d = new Date(o.date + 'T12:00:00'); return `${WD[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}. ${o.time}`; }
+act['fx-open'] = async el => {
+  const o = (window.OTTELUT || []).find(x => String(x.no) === el.dataset.no); if (!o) return;
+  const id = 'm' + o.no;
+  if (!S.gamesLoaded) { toast('Ladataan, yritä hetken kuluttua', 'mid'); return; }
+  if (!S.games.some(g => g.id === id)) {
+    await backend.createGame({ id, teamId: o.team, opponent: o.opp, home: o.home, away: o.away, date: o.date, time: o.time, venue: o.venue, no: o.no, createdAt: Date.now(), rec: { id: S.devId, name: S.name, at: Date.now() } });
+  }
+  S.tab = 'rec'; go('#/g/' + id);
+};
+
+/* ---- Joukkue + pelaajat ---- */
+function parseRoster(text) {
+  const out = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim();
+    const m = /^(\d{1,3})\s+([^\d]+?)\s*(?:\d.*)?$/.exec(line);
+    if (m && m[2].trim().length > 2 && !/^(Joukkue|Valmentaja|Nimi)/i.test(m[2].trim())) out.push({ num: m[1], name: m[2].trim() });
+  }
+  return out;
+}
+function rosterRows() {
+  return S.draft.players.map((p, i) => `<div class="prow"><input type="tel" inputmode="numeric" data-i="${i}" data-f="num" value="${esc(p.num)}" placeholder="#"><input type="text" data-i="${i}" data-f="name" value="${esc(p.name)}" placeholder="Sukunimi Etunimi"><button class="btn bad" data-act="roster-del" data-i="${i}" aria-label="Poista">✕</button></div>`).join('');
+}
+function openRoster() {
+  const d = S.draft;
+  openModal(`<h3>${d.id ? 'Muokkaa joukkuetta' : 'Uusi joukkue'}</h3>
+    <label class="f">Joukkueen nimi</label><input type="text" id="tname" value="${esc(d.name)}" placeholder="esim. JyLe/U15">
+    <label class="f">Tuo pelaajat tulospalvelusta: avaa joukkueen Pelaajat-välilehti, valitse taulukko, kopioi ja liitä tähän</label>
+    <textarea id="tpaste" placeholder="2 Sukunimi Etunimi 0 Nuorten kilpapassi&#10;7 Sukunimi Etunimi 0 ..."></textarea>
+    <div class="btns" style="margin-top:8px"><button class="btn" data-act="roster-import">Tuo liitetyt pelaajat</button></div>
+    <label class="f">Pelaajat</label><div id="prows">${rosterRows()}</div>
+    <button class="btn" data-act="roster-add" style="width:100%">+ Lisää pelaaja käsin</button>
+    <div class="btns"><button class="btn" data-act="close">Peruuta</button><button class="btn pri" data-act="roster-save">Tallenna</button></div>`);
+}
+sheet.addEventListener('input', e => {
+  const el = e.target; if (!S.draft || el.dataset.f === undefined) return;
+  S.draft.players[+el.dataset.i][el.dataset.f] = el.value;
+});
+act['team-new'] = () => { S.draft = { id: null, name: '', players: [] }; openRoster(); };
+act['team-edit'] = () => { const t = curTeam(); S.draft = { id: t.id, name: t.name, players: structuredClone(t.players.filter(p => !p.hidden)) }; openRoster(); };
+act['roster-add'] = () => { S.draft.name = $('#tname').value; S.draft.players.push({ id: 'p' + uid(), num: '', name: '' }); $('#prows').innerHTML = rosterRows(); const ins = sheet.querySelectorAll('.prow input[data-f=num]'); ins[ins.length - 1]?.focus(); };
+act['roster-del'] = el => { S.draft.players.splice(+el.dataset.i, 1); $('#prows').innerHTML = rosterRows(); };
+act['roster-import'] = () => {
+  const found = parseRoster($('#tpaste').value);
+  if (!found.length) { toast('Pelaajia ei löytynyt liitetystä tekstistä', 'bad', 2500); return; }
+  for (const f of found) {
+    const ex = S.draft.players.find(p => normName(p.name) === normName(f.name));
+    if (ex) ex.num = f.num; else S.draft.players.push({ id: 'p' + uid(), num: f.num, name: f.name });
+  }
+  S.draft.players.sort(byNum); $('#tpaste').value = ''; $('#prows').innerHTML = rosterRows(); toast(`${found.length} pelaajaa tuotu`, 'ok');
+};
+act['roster-save'] = async () => {
+  const name = $('#tname').value.trim(); if (!name) { $('#tname').focus(); return; }
+  const old = S.draft.id ? (S.teams.find(t => t.id === S.draft.id)?.players || []) : [];
+  const keep = S.draft.players.filter(p => p.name.trim());
+  const keepIds = new Set(keep.map(p => p.id));
+  const hidden = old.filter(p => !keepIds.has(p.id)).map(p => ({ ...p, hidden: true }));  // poistettu pelaaja piilotetaan, tilastot säilyvät
+  const players = [...keep.map(p => ({ id: p.id, num: String(p.num).trim(), name: p.name.trim() })), ...hidden].sort(byNum);
+  const id = await backend.saveTeam({ id: S.draft.id, name, players });
+  S.teamId = id; LS.set('bs_team', id); closeModal(); cleanup(); mountHome();
+};
+
+/* =========================================================
+   Pelinäkymä
+   ========================================================= */
+const isRec = () => S.game && S.game.rec && S.game.rec.id === S.devId;
+function mountGame(gid) {
+  S.view = 'game'; S.game = undefined; S.events = []; S.sel = null; S.setFilter = 'all';
+  S.subs.push(backend.watchGame(gid, g => { S.game = g; updateGame(); }));
+  S.subs.push(backend.watchEvents(gid, ev => { S.events = ev; if (S.view === 'game') updateGame(); }));
+  keepAwake();
+  updateGame();
+}
+function updateGame() {
+  if (S.view !== 'game') return;
+  const g = S.game;
+  if (g === undefined || (!S.teamsLoaded && g)) { if (!$('#g-main')) app.innerHTML = `<div class="page"><div class="wrap mut">Ladataan…</div></div>`; return; }
+  if (g === null) { app.innerHTML = `<div class="page"><div class="top"><button class="ib" data-act="home">←</button><div class="ttl">Peliä ei löytynyt</div></div></div>`; return; }
+  const team = S.teams.find(t => t.id === g.teamId);
+  const rec = isRec();
+  const tab = rec ? (S.tab || 'rec') : 'stats';
+  if (!$('#g-main')) {
+    app.innerHTML = `<div class="gscreen">
+      <div class="top"><button class="ib" data-act="home" aria-label="Takaisin">←</button><div class="ttl" id="g-title"></div><button class="ib" data-act="gmenu" aria-label="Valikko">⋯</button></div>
+      <div class="bar" id="g-bar"></div><div class="tabs" id="g-tabs"></div>
+      <div class="gbody"><div class="gmain" id="g-main"></div><div class="acts" id="g-acts"></div></div></div>`;
+  }
+  $('#g-title').innerHTML = `${g.home && g.away ? esc(g.home) + ' – ' + esc(g.away) : esc(team ? team.name : '') + ' – ' + esc(g.opponent)}<span class="sub">${fmtDate(g.date)}${g.time ? ' klo ' + esc(g.time) : ''}</span>`;
+  const last = S.events[0]; const lp = last && team?.players.find(p => p.id === last.pid);
+  const rt = resTxt(g);
+  $('#g-bar').innerHTML = rec
+    ? (g.finished
+      ? `<button class="setbtn" data-act="set-menu">Ottelu päättynyt <small>${esc(rt)}</small></button><div class="grow"></div>`
+      : `<button class="setbtn" data-act="set-menu">Erä ${g.set || 1} <small>Päätä ▾</small></button>
+         <button class="undo" data-act="undo" ${last ? '' : 'disabled'}>↶ Kumoa${last ? `: #${esc(lp?.num ?? '?')} ${esc(surname(lp?.name))} · ${LABEL[last.type]}` : ''}</button>`)
+    : `<div class="setc"><span style="padding:0 12px">${g.finished ? 'Päättynyt' : 'Erä ' + (g.set || 1)}</span></div>
+       <div class="grow small mut">${g.finished ? esc(rt) : (g.rec ? 'Kirjaaja: <b>' + esc(g.rec.name) + '</b>' : 'Ei kirjaajaa') + ' · katselutila'}</div>
+       <button class="btn pri" data-act="claim" style="min-height:44px;padding:0 14px">Ota kirjaus</button>`;
+  $('#g-tabs').innerHTML = rec ? [['rec', 'Kirjaa'], ['log', 'Kirjaukset'], ['stats', 'Tilastot'], ['tulos', 'Tulos']].map(([id, l]) => `<button class="chip ${tab === id ? 'on' : ''}" data-act="tab" data-id="${id}">${l}</button>`).join('') : '';
+  $('#g-tabs').classList.toggle('hide', !rec);
+  const main = $('#g-main'), acts = $('#g-acts'), st = main.scrollTop;
+  if (tab === 'rec' && g.finished) {
+    acts.classList.add('hide'); acts.innerHTML = '';
+    main.innerHTML = `<div class="wrap"><div class="card"><b style="font-size:18px">Ottelu päättynyt</b><p class="mut">${esc(rt) || 'Lopputulosta ei kirjattu.'}</p><button class="btn pri" style="width:100%" data-act="reopen">Jatka kirjausta</button></div></div>`;
+  } else if (tab === 'rec') {
+    const act2 = new Set(Object.keys(g.tot || {}).filter(pid => sumC(g.tot[pid]) > 0));
+    const ps = (team?.players || []).filter(p => (!p.hidden && !(g.absent || []).includes(p.id)) || act2.has(p.id)).sort(byNum);
+    const roster = (team?.players || []).filter(p => !p.hidden), here = roster.filter(p => !(g.absent || []).includes(p.id)).length;
+    main.innerHTML = ps.length ? `<div class="lurow"><span>Mukana <b>${here}/${roster.length}</b> pelaajaa</span><button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid">${ps.map(p => {
+      const c = g.tot?.[p.id], x = calc(c), meta = sumC(c) ? `S${x.srv} P${x.pt} V${x.rec}` : '';
+      return `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${esc(firstname(p.name))}</small><i>${meta}</i></button>`;
+    }).join('')}</div>` : `<div class="wrap mut">Ei pelaajia. Lisää pelaajat etusivun “Pelaajat”-napista tai valikon kautta valitse kokoonpano.</div>`;
+    const sp = S.sel && team?.players.find(p => p.id === S.sel);
+    acts.classList.remove('hide'); acts.classList.toggle('off', !sp);
+    acts.innerHTML = `<div class="selline ${sp ? '' : 'none'}"><span>${sp ? `#${esc(sp.num)} ${esc(sp.name)}` : 'Valitse pelaaja'}</span>${S.flash ? `<em class="fl t-${S.flash.tone}">✓ ${esc(S.flash.text)}</em>` : ''}</div>` + ACTIONS.map(r =>
+      `<div class="arow"><div class="lbl">${r.grp}</div>${r.items.map(([t, l, s]) => `<button class="ab ${TONE[t]}${t === 'rec_mid' ? ' wide' : ''}" data-act="rec" data-type="${t}">${l}</button>`).join('')}</div>`).join('');
+  } else if (tab === 'tulos') {
+    acts.classList.add('hide');
+    const ts = (window.JOUKKUEET || []).find(t => t.id === g.teamId)?.ts;
+    if (!$('#tsframe')) main.innerHTML = ts
+      ? `<div class="tsbar"><span class="small mut">Tulospalvelun live-tulos, päivittyy itsestään</span><a class="btn" href="https://tulospalvelu.lentopallo.fi/team/${ts}/fixture" target="_blank" rel="noopener">Avaa erikseen</a></div><iframe id="tsframe" title="Tulospalvelu" src="https://tulospalvelu.lentopallo.fi/team/${ts}/fixture"></iframe>`
+      : '<div class="wrap mut">Tulospalvelun linkkiä ei ole asetettu tälle joukkueelle.</div>';
+  } else if (tab === 'log') {
+    acts.classList.add('hide');
+    main.innerHTML = logHtml(team);
+  } else {
+    acts.classList.add('hide');
+    const maxSet = Math.max(g.set || 1, ...Object.keys(g.sets || {}).map(k => +k.slice(1) || 1));
+    const f = S.setFilter === 'all' || +S.setFilter > maxSet ? 'all' : S.setFilter;
+    const counts = f === 'all' ? (g.tot || {}) : (g.sets?.['s' + f] || {});
+    main.innerHTML = `<div class="chips" style="padding:8px 10px 0"><button class="chip ${f === 'all' ? 'on' : ''}" data-act="setf" data-id="all">Koko peli</button>${Array.from({ length: maxSet }, (_, i) => `<button class="chip ${f == i + 1 ? 'on' : ''}" data-act="setf" data-id="${i + 1}">Erä ${i + 1}${(() => { const r = g.res?.['s' + (i + 1)]; return r && r.us != null && r.opp != null ? ' (' + r.us + '–' + r.opp + ')' : ''; })()}</button>`).join('')}</div>`
+      + statTable(statRows(team, counts))
+      + `<h2 style="padding:0 12px">Viimeisimmät</h2><div class="evl">${S.events.slice(0, 15).map(e => { const p = team?.players.find(x => x.id === e.pid); return `<div><span><b>#${esc(p?.num ?? '?')}</b> ${esc(surname(p?.name))} · ${LABEL[e.type]}</span><span class="mut">erä ${e.set}${e.by ? ' · ' + esc(e.by) : ''}</span></div>`; }).join('') || '<div class="mut">Ei kirjauksia.</div>'}</div>`;
+  }
+  main.style.overflow = tab === 'tulos' ? 'hidden' : '';
+  main.scrollTop = st;
+  if (rec && tab === 'rec' && !g.lu && !(g.n > 0) && S.luShown !== g.id && !modalEl.classList.contains('open')) { S.luShown = g.id; lineupModal(); }
+}
+const fmtT = ts => { const d = new Date(ts || Date.now()); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+function logHtml(team) {
+  if (!S.events.length) return '<div class="wrap mut">Ei kirjauksia vielä.</div>';
+  return `<div class="evl" style="padding-top:8px">${S.events.map(e => { const p = team?.players.find(x => x.id === e.pid);
+    return `<button class="ev" data-act="ev-edit" data-id="${e.id}"><span><b>#${esc(p?.num ?? '?')}</b> ${esc(surname(p?.name))} · ${LABEL[e.type]}</span><span class="mut small">${fmtT(e.ts)} · erä ${e.set}</span></button>`; }).join('')}</div>
+    <div class="note">Napauta kirjausta korjataksesi pelaajaa, suoritusta tai erää, tai poistaaksesi sen.</div>`;
+}
+function openEdit() {
+  const g = S.game, team = S.teams.find(t => t.id === g.teamId), ed = S.edit;
+  const ps = (team?.players || []).filter(p => !p.hidden || p.id === ed.pid).sort(byNum);
+  openModal(`<h3>Korjaa kirjaus</h3>
+    <label class="f">Pelaaja</label><div class="chips">${ps.map(p => `<button class="chip ${ed.pid === p.id ? 'on' : ''}" data-act="ed-p" data-id="${p.id}">${esc(p.num)} ${esc(surname(p.name))}</button>`).join('')}</div>
+    <label class="f">Suoritus</label><div class="chips">${TYPES.map(t => `<button class="chip ${ed.type === t ? 'on' : ''}" data-act="ed-t" data-id="${t}">${LABEL[t]}</button>`).join('')}</div>
+    <label class="f">Erä</label><div class="chips">${[1, 2, 3, 4, 5].map(n => `<button class="chip ${ed.set === n ? 'on' : ''}" data-act="ed-s" data-id="${n}">${n}</button>`).join('')}</div>
+    <div class="btns"><button class="btn bad" data-act="ed-del">Poista</button><button class="btn" data-act="close">Peruuta</button><button class="btn pri" data-act="ed-save">Tallenna</button></div>`);
+}
+act['ev-edit'] = el => { const e = S.events.find(x => x.id === el.dataset.id); if (!e || !isRec()) return; S.edit = { pid: e.pid, type: e.type, set: e.set, orig: { ...e } }; openEdit(); };
+act['ed-p'] = el => { S.edit.pid = el.dataset.id; openEdit(); };
+act['ed-t'] = el => { S.edit.type = el.dataset.id; openEdit(); };
+act['ed-s'] = el => { S.edit.set = +el.dataset.id; openEdit(); };
+act['ed-save'] = () => {
+  const { orig, pid, type, set } = S.edit; closeModal();
+  if (orig.pid !== pid || orig.type !== type || orig.set !== set) { backend.editEvent(S.game.id, orig, { pid, type, set }); toast('Korjattu', 'ok', 900); }
+};
+act['ed-del'] = () => { const o = S.edit.orig; closeModal(); backend.undo(S.game.id, o); toast('Poistettu', '', 900); };
+act.home = () => go('#/');
+act.tab = el => { S.tab = el.dataset.id; updateGame(); };
+act.setf = el => { S.setFilter = el.dataset.id; updateGame(); };
+act.pick = el => { S.sel = S.sel === el.dataset.id ? null : el.dataset.id; updateGame(); };
+act.rec = el => {
+  if (!isRec()) return;
+  if (S.game.finished) { toast('Ottelu on päättynyt', 'mid'); return; }
+  if (!S.sel) { toast('Valitse pelaaja ensin', 'mid'); return; }
+  const type = el.dataset.type, key = S.sel + type, now = Date.now();
+  if (S._k === key && now - S._t < 300) return;  // vahingossa tuplatapautus
+  S._k = key; S._t = now;
+  const g = S.game, team = S.teams.find(t => t.id === g.teamId), p = team?.players.find(x => x.id === S.sel);
+  backend.record(g.id, { pid: S.sel, type, set: g.set || 1, by: S.name });
+  S.flash = { text: `#${p?.num ?? '?'} ${surname(p?.name)} · ${type === 'rec_mid' ? 'Keskihyökkäys ei mahdollinen' : LABEL[type]}`, tone: TONE[type] };
+  clearTimeout(S._ft); S._ft = setTimeout(() => { S.flash = null; updateGame(); }, 2500);
+  navigator.vibrate?.(12);
+  S.sel = null;  // heti takaisin alkutilaan
+  updateGame();
+};
+act.undo = () => {
+  const e = S.events[0]; if (!e || !isRec()) return;
+  backend.undo(S.game.id, e); toast('Kumottu', '', 700);
+};
+function patchLocal(fields) { backend.patchGame(S.game.id, fields); for (const [k, v] of Object.entries(fields)) setPath(S.game, k, v); updateGame(); }
+function setSet(n) { if (n < 1 || n > 5) return; patchLocal({ set: n }); }
+function readScore() { const a = $('#sc-us')?.value.trim() ?? '', b = $('#sc-opp')?.value.trim() ?? ''; return { us: a === '' || isNaN(+a) ? null : +a, opp: b === '' || isNaN(+b) ? null : +b }; }
+function setMenu() {
+  const g = S.game, n = g.set || 1, cur = g.finished ? (g.res?.['s' + n] || {}) : (g.res?.['s' + n] || {});
+  openModal(`<h3>${g.finished ? 'Ottelu päättynyt' : 'Erä ' + n}</h3>
+    ${g.finished ? `<p class="mut">${esc(resTxt(g)) || 'Lopputulosta ei kirjattu.'}</p><div class="btns"><button class="btn" data-act="close">Sulje</button><button class="btn pri" data-act="reopen">Jatka kirjausta</button></div>` : `
+    <label class="f">Erän ${n} lopputulos (voi jättää tyhjäksi)</label>
+    <div class="row"><div class="grow"><div class="small mut">JyLe</div><input type="tel" inputmode="numeric" id="sc-us" value="${cur.us ?? ''}"></div><div style="padding-top:22px">–</div><div class="grow"><div class="small mut">${esc(g.opponent || 'Vastustaja')}</div><input type="tel" inputmode="numeric" id="sc-opp" value="${cur.opp ?? ''}"></div></div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      ${n < 5 ? `<button class="btn pri" data-act="set-end">Erä ${n} päättyi, aloita erä ${n + 1}</button>` : ''}
+      <button class="btn ${n < 5 ? '' : 'pri'}" data-act="match-end">Ottelu päättyi</button>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:space-between"><span class="small mut">Väärä erä? Vaihda käsin</span><div class="setc"><button data-act="sm-prev" aria-label="Edellinen erä">‹</button><span>Erä ${n}</span><button data-act="sm-next" aria-label="Seuraava erä">›</button></div></div>
+    <div class="btns"><button class="btn" data-act="close">Sulje</button></div>`}`);
+}
+act['set-menu'] = setMenu;
+act['sm-prev'] = () => { setSet((S.game.set || 1) - 1); setMenu(); };
+act['sm-next'] = () => { setSet((S.game.set || 1) + 1); setMenu(); };
+act['set-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, set: n + 1 }); toast('Erä ' + n + ' päättyi', 'ok'); };
+act['match-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); S.sel = null; patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, finished: true, end: Date.now() }); toast('Ottelu päättyi', 'ok'); };
+act.reopen = () => { closeModal(); patchLocal({ finished: false }); };
+act.claim = () => {
+  const g = S.game;
+  if (g.rec && g.rec.id !== S.devId) confirmModal(`${g.rec.name} kirjaa tällä hetkellä. Otetaanko kirjaus itselle?`, 'claim-yes');
+  else act['claim-yes']();
+};
+act['claim-yes'] = () => { closeModal(); backend.patchGame(S.game.id, { rec: { id: S.devId, name: S.name, at: Date.now() } }); S.game.rec = { id: S.devId, name: S.name }; S.tab = 'rec'; keepAwake(); updateGame(); };
+
+/* ---- Pelin valikko ---- */
+function gameMenu() {
+  const g = S.game;
+  openModal(`<h3>Valikko</h3>
+    <button class="btn" style="width:100%;margin-bottom:8px" data-act="lineup">Ketkä ovat mukana tässä pelissä</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" data-act="game-csv">Lataa pelin tilastot (CSV)</button>
+    <button class="btn bad" style="width:100%;margin-bottom:8px" data-act="game-del-ask">Poista peli</button>
+    <div class="btns"><button class="btn pri" data-act="close">Sulje</button></div>`);
+}
+act.gmenu = gameMenu;
+act['game-csv'] = () => { const g = S.game, team = S.teams.find(t => t.id === g.teamId); downloadCSV(`${team?.name}_${g.opponent}_${g.date}`, statRows(team, g.tot || {})); };
+act['game-del-ask'] = () => confirmModal('Poistetaanko peli ja kaikki sen kirjaukset pysyvästi?', 'game-del');
+act['game-del'] = async () => { const id = S.game.id; closeModal(); try { await backend.deleteGame(id); } catch (e) { toast('Poisto epäonnistui', 'bad'); return; } go('#/'); };
+function lineupModal() {
+  const g = S.game, team = S.teams.find(t => t.id === g.teamId), ab = new Set(g.absent || []);
+  const ps = (team?.players || []).filter(p => !p.hidden).sort(byNum);
+  openModal(`<h3>Ketkä pelaavat?</h3><p class="mut small">Napauta pelaaja pois, jos hän ei ole mukana tässä pelissä. Mukana olevat on merkitty tummalla (${ps.length - ps.filter(p => ab.has(p.id)).length}/${ps.length}).</p>
+    <div class="chips">${ps.map(p => `<button class="chip ${ab.has(p.id) ? '' : 'on'}" data-act="toggle-absent" data-id="${p.id}">${esc(p.num)} ${esc(surname(p.name))}</button>`).join('')}</div>
+    <div class="btns"><button class="btn" data-act="lineup-all">Kaikki mukana</button><button class="btn pri" data-act="lineup-done">Valmis</button></div>`);
+}
+act['lineup-all'] = () => { S.game.absent = []; backend.patchGame(S.game.id, { absent: [] }); lineupModal(); updateGame(); };
+act['lineup-done'] = () => { closeModal(); S.game.lu = true; backend.patchGame(S.game.id, { lu: true }); updateGame(); };
+act.lineup = lineupModal;
+act['toggle-absent'] = el => {
+  const s = new Set(S.game.absent || []); s.has(el.dataset.id) ? s.delete(el.dataset.id) : s.add(el.dataset.id);
+  S.game.absent = [...s]; backend.patchGame(S.game.id, { absent: S.game.absent }); lineupModal(); updateGame();
+};
+
+/* =========================================================
+   Kausitilastot
+   ========================================================= */
+function mountSeason(tid) {
+  S.view = 'season'; S.seasonTeam = tid; S.seasonGames = [];
+  S.subs.push(backend.watchAllGames(tid, gs => { S.seasonGames = gs; updateSeason(); }));
+  updateSeason();
+}
+function seasonData() {
+  const team = S.teams.find(t => t.id === S.seasonTeam); let agg = {}; const gp = {};
+  for (const g of S.seasonGames) for (const [pid, c] of Object.entries(g.tot || {})) { if (sumC(c) > 0) { agg[pid] = addC(agg[pid] || {}, c); gp[pid] = (gp[pid] || 0) + 1; } }
+  return { team, rows: statRows(team, agg), gp };
+}
+function updateSeason() {
+  if (S.view !== 'season') return;
+  const { team, rows, gp } = seasonData();
+  app.innerHTML = `<div class="page"><div class="top"><button class="ib" data-act="home">←</button><div class="ttl">Kausi – ${esc(team?.name || '')}<span class="sub">${S.seasonGames.length} peliä</span></div><button class="ib" data-act="season-csv" aria-label="CSV">⬇</button></div>
+    ${statTable(rows, { games: gp })}</div>`;
+}
+act['season-csv'] = () => { const { team, rows, gp } = seasonData(); downloadCSV(`${team?.name}_kausi`, rows, gp); };
+
+/* =========================================================
+   Tapahtumankäsittely + käynnistys
+   ========================================================= */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const fn = act[el.dataset.act]; if (fn) { e.preventDefault(); fn(el, e); }
+});
+(async function boot() {
+  const code = window.SPACE_CODE || 'jyle-kausi-2026';
+  try { await initBackend(code); enter(code); }
+  catch (e) {
+    console.error(e);
+    app.innerHTML = `<div class="page"><div class="wrap"><div class="card"><b>Yhteys epäonnistui</b><p class="mut">${esc(e.code || e.message)}</p><button class="btn pri" onclick="location.reload()">Yritä uudelleen</button></div></div></div>`;
+  }
+})();
+</script>
+</body>
+</html>
