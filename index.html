@@ -434,8 +434,8 @@ function updateHome() {
   const fxCard = o => {
     const g = byId.get('m' + o.no);
     const mine = g && g.rec && g.rec.id === S.devId;
-    const pill = g && g.finished ? 'Avaa' : !g || !g.rec ? (g ? 'Ota kirjaus' : 'Aloita') : mine ? 'Jatka' : 'Katsele';
-    const info = g ? (g.finished ? `Päättynyt${resTxt(g) ? ' ' + esc(resTxt(g)) : ''} · ${g.n || 0} kirjausta` : `${g.n || 0} kirjausta · erä ${g.set || 1}${g.rec ? ' · kirjaaja ' + esc(g.rec.name) : ''}`) : 'ei vielä aloitettu';
+    const pill = g && g.finished ? 'Avaa' : g ? 'Kirjaa' : 'Aloita';
+    const info = g ? (g.finished ? `Päättynyt${resTxt(g) ? ' ' + esc(resTxt(g)) : ''} · ${g.n || 0} kirjausta` : `${g.n || 0} kirjausta · erä ${g.set || 1}${g.rec ? ' · aloitti ' + esc(g.rec.name) : ''}`) : 'ei vielä aloitettu';
     return `<button class="gitem fx" data-act="fx-open" data-no="${o.no}"><div class="grow"><b>${esc(o.home)} – ${esc(o.away)}</b><div class="mut small">${fmtFx(o)} · ${esc(o.venue)}</div><div class="mut small">${info}</div></div><span class="pill ${mine || !g ? 'pri' : ''}">${pill}</span></button>`;
   };
   app.innerHTML = `<div class="page">
@@ -528,7 +528,8 @@ act['roster-save'] = async () => {
 /* =========================================================
    Pelinäkymä
    ========================================================= */
-const isRec = () => S.game && S.game.rec && S.game.rec.id === S.devId;
+const isRec = () => !!S.game;  // kaikki voivat kirjata samaan aikaan
+const myLast = () => S.events.find(e => e.dev === S.devId) || null;  // kumoa vain oma viimeisin kirjaus
 function mountGame(gid) {
   S.view = 'game'; S.game = undefined; S.events = []; S.sel = null; S.setFilter = 'all';
   S.subs.push(backend.watchGame(gid, g => { S.game = g; updateGame(); }));
@@ -551,7 +552,7 @@ function updateGame() {
       <div class="gbody"><div class="gmain" id="g-main"></div><div class="acts" id="g-acts"></div></div></div>`;
   }
   $('#g-title').innerHTML = `${g.home && g.away ? esc(g.home) + ' – ' + esc(g.away) : esc(team ? team.name : '') + ' – ' + esc(g.opponent)}<span class="sub">${fmtDate(g.date)}${g.time ? ' klo ' + esc(g.time) : ''}</span>`;
-  const last = S.events[0]; const lp = last && team?.players.find(p => p.id === last.pid);
+  const last = myLast(); const lp = last && team?.players.find(p => p.id === last.pid);
   const rt = resTxt(g);
   $('#g-bar').innerHTML = rec
     ? (g.finished
@@ -638,7 +639,7 @@ act.rec = el => {
   if (S._k === key && now - S._t < 300) return;  // vahingossa tuplatapautus
   S._k = key; S._t = now;
   const g = S.game, team = S.teams.find(t => t.id === g.teamId), p = team?.players.find(x => x.id === S.sel);
-  backend.record(g.id, { pid: S.sel, type, set: g.set || 1, by: S.name });
+  backend.record(g.id, { pid: S.sel, type, set: g.set || 1, by: S.name, dev: S.devId });
   S.flash = { text: `#${p?.num ?? '?'} ${surname(p?.name)} · ${type === 'rec_mid' ? 'Keskihyökkäys ei mahdollinen' : LABEL[type]}`, tone: TONE[type] };
   clearTimeout(S._ft); S._ft = setTimeout(() => { S.flash = null; updateGame(); }, 2500);
   navigator.vibrate?.(12);
@@ -646,7 +647,7 @@ act.rec = el => {
   updateGame();
 };
 act.undo = () => {
-  const e = S.events[0]; if (!e || !isRec()) return;
+  const e = myLast(); if (!e) return;
   backend.undo(S.game.id, e); toast('Kumottu', '', 700);
 };
 function patchLocal(fields) { backend.patchGame(S.game.id, fields); for (const [k, v] of Object.entries(fields)) setPath(S.game, k, v); updateGame(); }
