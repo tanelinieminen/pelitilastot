@@ -75,6 +75,14 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .gbody{flex:1;min-height:0;display:flex;flex-direction:column}
 .gmain{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
 .gmain>*{flex-shrink:0}
+/* matala (vaaka-asennossa oleva) näyttö: tiivis yläosa; tilasto- ja kirjausloki-välilehdillä koko sivu vierii, jotta taulukolle jää tilaa */
+@media (max-height:520px){
+.gscreen .top{padding-top:4px;padding-bottom:4px}.gscreen .bar{padding:3px 10px}.gscreen .tabs{padding:3px 10px}
+.gscreen .tabs .chip{min-height:32px;padding:3px 4px}.setbtn,.undo,.setc button{height:34px}
+.gscreen.flow{height:auto;min-height:100%}.gscreen.flow .gbody{display:block;min-height:0}.gscreen.flow .gmain{display:block;overflow:visible}
+.gscreen.flow .tabs{position:sticky;top:0;z-index:5}
+.gscreen .ab{height:44px;font-size:16px}.gscreen .ab.wide{font-size:14px}.gscreen .acts{padding-top:4px;padding-bottom:4px}.gscreen .arow{margin-bottom:4px}.gscreen .pc{min-height:60px}
+}
 .tsbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px}
 .tsbar .btn{min-height:34px;padding:4px 12px;font-size:14px;text-decoration:none;color:inherit}
 #tsframe{display:block;width:100%;height:calc(100% - 48px);border:0;background:#fff}
@@ -569,6 +577,7 @@ function updateGame() {
   $('#g-tabs').innerHTML = rec ? [['rec', 'Kirjaa'], ['log', 'Kirjaukset'], ['stats', 'Tilastot'], ['tulos', 'Tulos']].map(([id, l]) => `<button class="chip ${tab === id ? 'on' : ''}" data-act="tab" data-id="${id}">${l}</button>`).join('') : '';
   $('#g-tabs').classList.toggle('hide', !rec);
   const main = $('#g-main'), acts = $('#g-acts'), st = main.scrollTop;
+  $('.gscreen').classList.toggle('flow', tab === 'stats' || tab === 'log');
   if (tab === 'rec' && g.finished) {
     acts.classList.add('hide'); acts.innerHTML = '';
     main.innerHTML = `<div class="wrap"><div class="card"><b style="font-size:18px">Ottelu päättynyt</b><p class="mut">${esc(rt) || 'Lopputulosta ei kirjattu.'}</p><button class="btn pri" style="width:100%" data-act="reopen">Jatka kirjausta</button></div></div>`;
