@@ -155,13 +155,13 @@ const resTxt = g => { const r = resInfo(g); return r.any ? `${r.w}–${r.l} (${r
 const normName = n => (n || '').toLowerCase().replace(/\s+/g, ' ').trim();
 
 const TYPES = ['srv_ok', 'srv_err', 'srv_ace', 'pt', 'err', 'blk', 'net', 'rec_good', 'rec_mid', 'rec_err'];
-const LABEL = { srv_ok: 'Syöttö onnistui', srv_err: 'Syöttövirhe', srv_ace: 'Ässä', pt: 'Hyökkäys', err: 'Virhe', blk: 'Torjunta', net: 'Verkkovirhe', rec_good: 'Vastaanotto hyvä', rec_mid: 'Vastaanotto: keskihyökkäys ei mahdollinen', rec_err: 'Vastaanottovirhe' };
+const LABEL = { srv_ok: 'Syöttö onnistui', srv_err: 'Syöttövirhe', srv_ace: 'Ässä', pt: 'Hyökkäyspiste', err: 'Hyökkäysvirhe', blk: 'Torjunta', net: 'Verkkovirhe', rec_good: 'Vastaanotto hyvä', rec_mid: 'Vastaanotto: keskihyökkäys ei mahdollinen', rec_err: 'Vastaanottovirhe' };
 const TONE = { srv_ok: 'ok', srv_err: 'bad', srv_ace: 'ace', pt: 'ace', err: 'bad', blk: 'ok', net: 'bad', rec_good: 'ok', rec_mid: 'mid', rec_err: 'bad' };
 const ACTIONS = [
   { grp: 'Syöttö', items: [['srv_ok', 'Onnistui'], ['srv_ace', 'Ässä'], ['srv_err', 'Virhe']] },
-  { grp: 'Piste/virhe', items: [['pt', 'Hyökkäys'], ['err', 'Virhe']] },
-  { grp: 'Torjunta', items: [['blk', 'Torjunta'], ['net', 'Verkkovirhe']] },
   { grp: 'Vastaanotto', items: [['rec_good', 'Hyvä'], ['rec_mid', 'Keskihyökkäys ei mahdollinen'], ['rec_err', 'Virhe']] },
+  { grp: 'Hyökkäys', items: [['pt', 'Piste'], ['err', 'Virhe']] },
+  { grp: 'Torjunta', items: [['blk', 'Torjunta'], ['net', 'Verkkovirhe']] },
 ];
 
 /* =========================================================
