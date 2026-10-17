@@ -787,10 +787,11 @@ function setLuModal() {
 function swapModal() {
   const g = S.game, pos = g.pos || {}, ps = presentPs(), sel = S.swap, order = 'PHYLK';
   const chip = p => `<button class="chip ${sel === p.id ? 'on' : ''}" data-act="swap-pick" data-id="${p.id}">${esc(p.num)} ${esc(surname(p.name))}${pos[p.id] ? `<small>${POSN[pos[p.id]]}</small>` : ''}</button>`;
-  const on = ps.filter(p => pos[p.id]).sort((a, b) => order.indexOf(pos[a.id]) - order.indexOf(pos[b.id]) || byNum(a, b)), bench = ps.filter(p => !pos[p.id]);
+  const on = ps.filter(p => pos[p.id] && pos[p.id] !== 'L').sort((a, b) => order.indexOf(pos[a.id]) - order.indexOf(pos[b.id]) || byNum(a, b)), bench = ps.filter(p => !pos[p.id]);
   openModal(`<h3>Vaihto</h3><p class="mut small">${sel ? 'Valitse nyt pelaaja, jonka kanssa vaihdetaan.' : 'Valitse ensin pelaaja, joka lähtee. Valitse sitten tilalle tuleva: hän ottaa kentällä hänen paikkansa.'}</p>
     <div class="small mut" style="margin-bottom:4px">Kentällä</div><div class="chips">${on.map(chip).join('') || '<span class="mut small">Kuusikkoa ei ole asetettu</span>'}</div>
     <div class="small mut" style="margin:10px 0 4px">Penkillä</div><div class="chips">${bench.map(chip).join('') || '<span class="mut small">Ei vaihtopelaajia</span>'}</div>
+    <p class="small mut" style="margin-top:10px">Libero pysyy liberona koko erän; roolit valitaan uudelleen seuraavan erän alussa.</p>
     <div class="btns"><button class="btn" data-act="wiz-restart">Valitse kuusikko uudelleen</button><button class="btn pri" data-act="close">Sulje</button></div>`);
 }
 act.swap = () => { S.swap = null; swapModal(); };
@@ -798,7 +799,7 @@ act['swap-pick'] = el => {
   const id = el.dataset.id, g = S.game;
   if (!S.swap || S.swap === id) { S.swap = S.swap === id ? null : id; swapModal(); return; }
   const a = S.swap, np = { ...(g.pos || {}) }, ra = np[a], rb = np[id];
-  if (!ra && !rb) { S.swap = id; swapModal(); return; }
+  if ((!ra && !rb) || ra === 'L' || rb === 'L') { S.swap = id; swapModal(); return; }
   delete np[a]; delete np[id]; if (rb) np[a] = rb; if (ra) np[id] = ra;
   S.swap = null; closeModal(); g.pos = np; backend.patchGame(g.id, { pos: np }); if (S.sel && !np[S.sel]) S.sel = null; updateGame(); toast('Vaihto tehty', 'ok', 900);
 };
