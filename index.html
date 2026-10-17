@@ -154,6 +154,29 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .bd li{display:flex;align-items:baseline;gap:6px;font-size:15px}.bd li b{font-weight:800}.bd li .v{margin-left:auto;font-weight:800;color:var(--pri)}
 th.sortable{cursor:pointer;text-decoration:underline dotted}th.sorted{color:var(--pri)}
 @media (min-width:700px){.boards{grid-template-columns:repeat(4,1fr)}}
+td.plk{cursor:pointer}td.plk b+span{text-decoration:underline dotted;text-underline-offset:3px}
+.pl{padding:8px 10px 24px;display:flex;flex-direction:column;gap:10px}
+.pl .hero{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.pl .hero .no{width:52px;height:52px;border-radius:50%;background:var(--pri);color:var(--pri-ink);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none}
+.pl .hero h2{margin:0;font-size:20px;color:var(--ink);text-transform:none;letter-spacing:0}.pl .hero .sub2{color:var(--mut);font-size:13px}
+.pl .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pl .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center}
+.pl .kpi b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}.pl .kpi span{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.pl .kpi small{display:block;font-size:11px;color:var(--mut)}
+.pl .two{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:700px){.pl .two{grid-template-columns:1fr 1fr}.pl .kpis{grid-template-columns:repeat(6,1fr)}}
+.pl .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.pl .box h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.pl .box.str h3{color:var(--ok)}.pl .box.dev h3{color:var(--mid)}.pl .box.trd h3{color:var(--pri)}
+.pl .box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.pl .box li.none{list-style:none;margin-left:-18px;color:var(--mut);font-size:14px}
+.pl .charts{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:700px){.pl .charts{grid-template-columns:repeat(3,1fr)}}
+.pl .ch h3{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.pl svg{width:100%;height:auto;display:block}
+.pl svg text{fill:var(--mut);font-size:10px;font-family:inherit}.pl svg text.v{fill:var(--ink);font-weight:700;font-size:11px}
+.pl svg .bar{fill:var(--pri)}.pl svg .bar.b2{fill:var(--acc)}.pl svg .bar.b3{fill:var(--ok)}.pl svg .ax{stroke:var(--line);stroke-width:1}.pl svg .ref{stroke:var(--mut);stroke-width:1;stroke-dasharray:3 3}
+.pl .tw{padding:0}
 .tw{overflow:auto;padding:8px}
 table.st{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 table.st th,table.st td{padding:8px 7px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
@@ -250,6 +273,8 @@ function makeLocal(code) {
     async hasSpace() { return LS.get(key, null) !== null; },
     async createSpace() { save(); },
     watchTeams: cb => watch(() => Object.values(db.teams), cb),
+    watchFixtures: cb => watch(() => Object.values(db.fixtures ||= {}), cb),
+    async saveFixtures(list) { db.fixtures ||= {}; for (const o of list) db.fixtures['m' + o.no] = o; save(); },
     async saveTeam(t) { t.id = t.id || uid(); db.teams[t.id] = t; save(); return t.id; },
     watchGames: (tid, cb) => watch(() => Object.values(db.games).filter(g => g.teamId === tid), cb),
     watchAllGames: (tid, cb) => watch(() => Object.values(db.games).filter(g => g.teamId === tid), cb),
@@ -292,6 +317,8 @@ function makeFirestore(code, { f, db }) {
     async hasSpace() { return (await f.getDoc(dref('meta', 'info'))).exists(); },
     async createSpace() { await f.setDoc(dref('meta', 'info'), { created: Date.now() }); },
     watchTeams: cb => f.onSnapshot(col('teams'), s => cb(s.docs.map(d => ({ ...d.data(), id: d.id })), s.metadata.fromCache), err),
+    watchFixtures: cb => f.onSnapshot(col('fixtures'), s => cb(s.docs.map(d => d.data())), err),
+    async saveFixtures(list) { const b = f.writeBatch(db); for (const o of list) b.set(dref('fixtures', 'm' + o.no), o); b.commit().catch(err); },
     async saveTeam(t) {
       const id = t.id || f.doc(col('teams')).id;
       f.setDoc(dref('teams', id), { name: t.name, players: t.players, updated: Date.now() }).catch(err);
@@ -405,7 +432,7 @@ function statRows(team, countsByPid) {
   rows.sort((a, b) => byNum(a.p, b.p));
   return rows;
 }
-function statTable(rows, { games } = {}) {
+function statTable(rows, { games, link } = {}) {
   if (!rows.length) return `<div class="note" style="padding:24px 12px">Ei kirjauksia vielä.</div>`;
   if (S.sortKey && S.sortKey !== 'num') { const val = r => { const v = calc(r.c)[S.sortKey]; return v == null ? -1e9 : v; }; rows = [...rows].sort((a, b) => val(b) - val(a)); }
   const sth = (k, label, cls = '', extra = '') => `<th class="${cls} sortable ${S.sortKey === k ? 'sorted' : ''}" ${extra} data-act="st-sort" data-k="${k}">${label}</th>`;
@@ -421,7 +448,7 @@ function statTable(rows, { games } = {}) {
   return `<div class="tw"><table class="st"><thead>
     <tr>${sth('num', 'Pelaaja', 'n', 'rowspan="2"')}${games ? '<th rowspan="2">Pelit</th>' : ''}${sth('pts', 'Pist.', '', 'rowspan="2"')}${sth('pm', '+/−', '', 'rowspan="2"')}<th class="g" colspan="5">Syöttö</th><th class="g" colspan="5">Hyökkäys</th><th class="g" colspan="3">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
     <tr><th class="g">Yht</th><th>Onn.</th>${sth('ace', 'Ässä')}<th>Virh.</th>${sth('srvPct', '%')}<th class="g">Yht</th>${sth('pt', 'Piste')}<th>Pelissä</th><th>Virhe</th><th>Tehok.</th>${sth('blk', 'Torjunta', 'g')}<th>Vaimennus</th><th>Verkkovirhe</th><th class="g">Yht</th><th>Hyvä</th><th>Kesk. ei mahd.</th><th>Virh.</th>${sth('recPct', '%')}</tr></thead>
-    <tbody>${rows.map(r => `<tr><td class="n"><b>${esc(r.p.num)}</b> ${esc(r.p.name)}</td>${games ? `<td>${games[r.p.id] || 0}</td>` : ''}${cell(r.c)}</tr>`).join('')}</tbody>
+    <tbody>${rows.map(r => `<tr><td class="n${link ? ' plk' : ''}"${link ? ` data-act="pl-open" data-pid="${esc(r.p.id)}"` : ''}><b>${esc(r.p.num)}</b> <span>${esc(r.p.name)}</span></td>${games ? `<td>${games[r.p.id] || 0}</td>` : ''}${cell(r.c)}</tr>`).join('')}</tbody>
     <tfoot><tr><td class="n">Yhteensä</td>${games ? '<td></td>' : ''}${cell(tot)}</tr></tfoot></table></div>
     <div class="note">Hyökkäys: Yht = piste + pelissä + virhe; Tehok. = (pisteet − virheet) / kaikki hyökkäykset (näkyy kun “Pelissä”-nappia on käytetty). Pist. = hyökkäyspisteet + ässät + torjunnat. Syöttö-% = (onnistui + ässä) / kaikki syötöt. Vastaanotto-% = hyvät / kaikki vastaanotot. “Kesk. ei mahd.” = keskihyökkäys ei mahdollinen. +/− = pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe).</div>`;
 }
@@ -445,9 +472,10 @@ function route() {
   app.innerHTML = ''; app.scrollTop = 0; scrollTo(0, 0);
   if (h[0] === 'g' && h[1]) return mountGame(h[1]);
   if (h[0] === 'season' && h[1]) return mountSeason(h[1]);
+  if (h[0] === 'player' && h[1] && h[2]) return mountPlayer(h[1], decodeURIComponent(h[2]));
   mountHome();
 }
-function refresh() { ({ home: updateHome, game: updateGame, season: updateSeason })[S.view]?.(); }
+function refresh() { ({ home: updateHome, game: updateGame, season: updateSeason, player: updatePlayer })[S.view]?.(); }
 
 /* =========================================================
    Käynnistys: ei kirjautumista, joukkueet esitäytetty (joukkueet.js)
@@ -465,6 +493,7 @@ function seedTeams(ts, fromCache) {
 }
 function enter(code) {
   S.code = code; S.teamsLoaded = false;
+  S.fixUnsub = backend.watchFixtures(fs => { S.fixtures = fs; if (S.view === 'home') updateHome(); });
   S.teamsUnsub = backend.watchTeams((ts, fromCache) => {
     S.teams = ts.sort((a, b) => a.name.localeCompare(b.name, 'fi')); S.teamsLoaded = true;
     seedTeams(ts, fromCache); refresh();
@@ -495,7 +524,7 @@ function updateHome() {
   const t = curTeam();
   if (t && S.gamesTeam !== t.id) { S.gamesTeam = t.id; subGames(t.id); }
   const today = todayStr();
-  const fx = (window.OTTELUT || []).filter(o => t && o.team === t.id).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const fx = allFixtures().filter(o => t && o.team === t.id).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   const upcoming = fx.filter(o => o.date >= today);
   const upIds = new Set(upcoming.map(o => 'm' + o.no));
   const byId = new Map(S.games.map(g => [g.id, g]));
@@ -512,7 +541,7 @@ function updateHome() {
     <div class="wrap">
       <div class="teamsel">${S.teams.map(x => `<button class="chip ${t && x.id === t.id ? 'on' : ''}" data-act="team-sel" data-id="${x.id}">${esc(x.name)}</button>`).join('')}</div>
       ${!t ? `<div class="card mut">Ladataan joukkueita…</div>` : `
-      <h2>Tulevat ottelut</h2>
+      <h2 style="display:flex;align-items:center;justify-content:space-between">Tulevat ottelut<button class="btn" style="min-height:34px;padding:4px 12px;font-size:13px;text-transform:none;letter-spacing:0" data-act="fx-fetch">Hae ottelut</button></h2>
       ${upcoming.length ? upcoming.map((o, i) => fxCard(o, i)).join('') : '<div class="mut">Ei tulevia otteluita tulospalvelussa.</div>'}
       ${window.OTTELUT_HAETTU ? `<div class="mut small" style="margin:-2px 0 8px">Ottelulista haettu tulospalvelusta ${fmtDate(window.OTTELUT_HAETTU)}</div>` : ''}
       <div class="row" style="margin-top:10px"><button class="btn pri grow" data-act="season">Kausitilastot</button><button class="btn grow" data-act="team-edit">Pelaajat (${t.players.filter(p => !p.hidden).length})</button></div>
@@ -534,13 +563,69 @@ act.close = () => closeModal();
 const WD = ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'];
 function fmtFx(o) { const d = new Date(o.date + 'T12:00:00'); return `${WD[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}. ${o.time}`; }
 act['fx-open'] = async el => {
-  const o = (window.OTTELUT || []).find(x => String(x.no) === el.dataset.no); if (!o) return;
+  const o = allFixtures().find(x => String(x.no) === el.dataset.no); if (!o) return;
   const id = 'm' + o.no;
   if (!S.gamesLoaded) { toast('Ladataan, yritä hetken kuluttua', 'mid'); return; }
   if (!S.games.some(g => g.id === id)) {
     await backend.createGame({ id, teamId: o.team, opponent: o.opp, home: o.home, away: o.away, date: o.date, time: o.time, venue: o.venue, no: o.no, createdAt: Date.now(), rec: { id: S.devId, name: S.name, at: Date.now() } });
   }
   S.tab = 'rec'; go('#/g/' + id);
+};
+
+/* ---- Ottelulista: staattinen lista + tulospalvelusta tuodut/käsin lisätyt (Firestore) ---- */
+function allFixtures() {
+  const m = new Map();
+  for (const o of window.OTTELUT || []) m.set(String(o.no), o);
+  for (const o of S.fixtures || []) m.set(String(o.no), o);
+  return [...m.values()];
+}
+const isOwn = n => /jyle|jyväs/i.test(n || '');
+function parseFixtures(text) {
+  const L = String(text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean), out = [], now = Date.now();
+  for (let i = 4; i < L.length; i++) {
+    const m = /^#(\d{3,8})$/.exec(L[i]); if (!m) continue;
+    const d = /^(?:ma|ti|ke|to|pe|la|su)\.?\s+(\d{1,2})\.(\d{1,2})\.?\s+(\d{1,2})[:.](\d{2})/i.exec(L[i + 1] || ''); if (!d) continue;
+    const y0 = new Date().getFullYear(); let dt = new Date(y0, +d[2] - 1, +d[1], 12);
+    if (dt.getTime() < now - 120 * 864e5) dt = new Date(y0 + 1, +d[2] - 1, +d[1], 12);
+    const home = L[i - 4], away = L[i - 3], cat = L[i - 2], venue = L[i - 1];
+    out.push({ no: +m[1], home, away, cat, venue, date: `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`, time: `${pad(+d[3])}:${d[4]}`, opp: isOwn(home) && !isOwn(away) ? away : isOwn(away) && !isOwn(home) ? home : away });
+  }
+  return out;
+}
+document.addEventListener('input', e => {
+  if (e.target.id !== 'fxpaste') return;
+  const n = parseFixtures(e.target.value).length, el = $('#fxprev');
+  if (el) el.textContent = n ? `Löytyi ${n} ottelua` : (e.target.value.trim() ? 'Ottelulistaa ei tunnistettu. Kopioi koko sivun teksti (Valitse kaikki).' : '');
+});
+act['fx-fetch'] = () => {
+  const t = curTeam(), ts = (window.JOUKKUEET || []).find(x => x.id === t?.id)?.ts;
+  openModal(`<h3>Hae ottelut tulospalvelusta</h3>
+    <ol class="small" style="padding-left:18px;margin:0 0 10px"><li>Avaa joukkueen sivu tulospalvelussa.</li><li>Paina sivua pitkään, valitse <b>Valitse kaikki</b> ja <b>Kopioi</b>.</li><li>Palaa tähän ja liitä teksti alle.</li></ol>
+    ${ts ? `<a class="btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-bottom:10px" href="https://tulospalvelu.lentopallo.fi/team/${ts}/fixture" target="_blank" rel="noopener">Avaa tulospalvelu (${esc(t.name)})</a>` : ''}
+    <textarea id="fxpaste" rows="5" placeholder="Liitä tulospalvelun sivun teksti tähän" style="width:100%"></textarea>
+    <div id="fxprev" class="small mut" style="min-height:20px;margin-top:4px"></div>
+    <div class="btns"><button class="btn" data-act="close">Peruuta</button><button class="btn" data-act="fx-manual">Lisää käsin</button><button class="btn pri" data-act="fx-import">Tuo ottelut</button></div>`);
+};
+act['fx-import'] = async () => {
+  const list = parseFixtures($('#fxpaste')?.value);
+  if (!list.length) { toast('Ottelulistaa ei tunnistettu', 'bad', 2200); return; }
+  const cur = curTeam();
+  const fs = list.map(o => { const k = /U(\d{2})/i.exec(o.cat || ''), tid = k && S.teams.some(t => t.id === 'u' + k[1]) ? 'u' + k[1] : cur.id; const { cat, ...rest } = o; return { ...rest, team: tid }; });
+  await backend.saveFixtures(fs); closeModal(); toast(`${fs.length} ottelua tuotu`, 'ok', 1800);
+};
+act['fx-manual'] = () => {
+  openModal(`<h3>Lisää ottelu käsin</h3>
+    <label class="f">Vastustaja</label><input type="text" id="fm-opp">
+    <label class="f">Koti vai vieras?</label><select id="fm-home" style="width:100%;min-height:44px"><option value="1">Kotiottelu</option><option value="0">Vierasottelu</option></select>
+    <div class="row"><div class="grow"><label class="f">Päivä</label><input type="date" id="fm-date" value="${todayStr()}"></div><div class="grow"><label class="f">Kello</label><input type="time" id="fm-time" value="12:00"></div></div>
+    <label class="f">Paikka (voi jättää tyhjäksi)</label><input type="text" id="fm-venue">
+    <div class="btns"><button class="btn" data-act="close">Peruuta</button><button class="btn pri" data-act="fm-save">Lisää</button></div>`);
+};
+act['fm-save'] = async () => {
+  const opp = $('#fm-opp').value.trim(); if (!opp) { $('#fm-opp').focus(); return; }
+  const home = $('#fm-home').value === '1', t = curTeam(), me = 'JyLe/' + (t?.name || '');
+  await backend.saveFixtures([{ no: 'x' + Date.now().toString(36), team: t.id, date: $('#fm-date').value || todayStr(), time: $('#fm-time').value || '12:00', home: home ? me : opp, away: home ? opp : me, opp, venue: $('#fm-venue').value.trim() }]);
+  closeModal(); toast('Ottelu lisätty', 'ok');
 };
 
 /* ---- Joukkue + pelaajat ---- */
@@ -1006,8 +1091,133 @@ function updateSeason() {
   if (S.view !== 'season') return;
   const { team, rows, gp } = seasonData();
   app.innerHTML = `<div class="page"><div class="top"><button class="ib" data-act="home">←</button><div class="ttl">Kausi – ${esc(team?.name || '')}<span class="sub">${S.seasonGames.length} peliä</span></div><button class="ib" data-act="season-csv" aria-label="CSV">⬇</button></div>
-    ${imgBtns()}${boardsHtml(boardsOf(rows, 10))}<h2 style="padding:0 12px;margin-bottom:0">Kaikki pelaajat</h2><div class="note" style="margin-top:2px">Napauta sarakeotsikkoa (Pist., Ässä, %, Torjunta…) järjestääksesi pelaajat.</div>${statTable(rows, { games: gp })}</div>`;
+    ${imgBtns()}${boardsHtml(boardsOf(rows, 10))}<h2 style="padding:0 12px;margin-bottom:0">Kaikki pelaajat</h2><div class="note" style="margin-top:2px">Napauta sarakeotsikkoa (Pist., Ässä, %, Torjunta…) järjestääksesi pelaajat. <b>Napauta pelaajan nimeä</b> nähdäksesi hänen kehityksensä, vahvuutensa ja kehityskohteensa.</div>${statTable(rows, { games: gp, link: 1 })}</div>`;
 }
+
+/* =========================================================
+   Pelaajakohtainen kausinäkymä (kehityskeskustelut)
+   ========================================================= */
+function mountPlayer(tid, pid) {
+  S.view = 'player'; S.seasonTeam = tid; S.plId = pid; S.seasonGames = [];
+  S.subs.push(backend.watchAllGames(tid, gs => { S.seasonGames = gs; updatePlayer(); }));
+  updatePlayer();
+}
+const pctOf = (a, b) => b ? Math.round(a / b * 100) : null;
+function playerData(tid, pid) {
+  const team = S.teams.find(t => t.id === tid), p = (team?.players || []).find(x => x.id === pid) || { id: pid, num: '', name: '(poistettu pelaaja)' };
+  const gs = [...S.seasonGames].sort((a, b) => ((a.date || '') + (a.time || '')).localeCompare((b.date || '') + (b.time || '')));
+  const rows = []; let tot = {}, ttot = {}, tgp = 0;
+  for (const g of gs) {
+    for (const c of Object.values(g.tot || {})) if (sumC(c) > 0) { ttot = addC(ttot, c); tgp++; }
+    const c = g.tot?.[pid]; if (c && sumC(c) > 0) { rows.push({ g, c, x: calc(c) }); tot = addC(tot, c); }
+  }
+  return { team, p, rows, tot, x: calc(tot), tx: calc(ttot), tgp, hasInP: g0(tot, 'att_in') > 0, hasInT: g0(ttot, 'att_in') > 0 };
+}
+function playerInsights(d) {
+  const { x, tx, rows } = d, n = rows.length, str = [], dev = [], trd = [], P = v => v + ' %';
+  if (n < 1) return { str, dev, trd };
+  // Syöttö
+  if (x.srv >= 10) {
+    const dv = tx.srvPct == null ? 0 : x.srvPct - tx.srvPct;
+    if (dv >= 8) str.push(`Varma syöttö: ${P(x.srvPct)} syötöistä pelissä (joukkue ${P(tx.srvPct)}).`);
+    if (x.ace >= 2 && x.ace / x.srv >= .1) str.push(`Syöttö tuottaa suoria pisteitä: ${x.ace} ässää (${P(pctOf(x.ace, x.srv))} syötöistä).`);
+    if (x.srvErr / x.srv >= .25) dev.push(`Syöttövirheitä ${x.srvErr}/${x.srv} (${P(pctOf(x.srvErr, x.srv))}). Hae varmuutta: sama rutiini joka syöttöön, riski vasta kun peruspeli pelaa.`);
+    else if (dv <= -8) dev.push(`Syöttö-% ${P(x.srvPct)} jää joukkueen keskiarvosta (${P(tx.srvPct)}).`);
+  }
+  // Vastaanotto
+  if (x.rec >= 10) {
+    const dv = tx.recPct == null ? 0 : x.recPct - tx.recPct;
+    if (dv >= 8) str.push(`Vahva vastaanotto: ${P(x.recPct)} hyviä (joukkue ${P(tx.recPct)}).`);
+    if (x.recErr / x.rec >= .15) dev.push(`Vastaanottovirheitä ${x.recErr}/${x.rec} (${P(pctOf(x.recErr, x.rec))}). Keskity pallon alle ja vakaaseen perusasentoon.`);
+    else if (dv <= -8) dev.push(`Vastaanotto-% ${P(x.recPct)} jää joukkueen keskiarvosta (${P(tx.recPct)}).`);
+  }
+  // Hyökkäys
+  if (d.hasInP && d.hasInT && x.att >= 10) {
+    const dv = tx.attPct == null ? 0 : x.attPct - tx.attPct;
+    if (dv >= 8) str.push(`Tehokas hyökkääjä: hyökkäystehokkuus ${P(x.attPct)} (joukkue ${P(tx.attPct)}).`);
+    else if (dv <= -8) dev.push(`Hyökkäystehokkuus ${P(x.attPct)} jää joukkueen keskiarvosta (${P(tx.attPct)}).`);
+    if (x.err / x.att >= .2) dev.push(`Hyökkäysvirheitä ${x.err}/${x.att} (${P(pctOf(x.err, x.att))}). Harjoittele pallon kontrollia ja maalin valintaa ennen lisävoimaa.`);
+  }
+  // Pisteet, +/−, torjunta, verkko
+  const pg = x.pts / n, tpg = d.tgp ? tx.pts / d.tgp : 0;
+  if (n >= 3 && x.pts >= 6 && tpg && pg >= tpg * 1.4) str.push(`Tekee paljon pisteitä: ${pg.toFixed(1).replace('.', ',')} / peli (joukkueen pelaajien keskiarvo ${tpg.toFixed(1).replace('.', ',')}).`);
+  if (n >= 3) {
+    const pm = x.pm / n;
+    if (pm >= 2) str.push(`Positiivinen vaikutus peliin: +/− keskimäärin ${fmtPM(Math.round(pm * 10) / 10).toString().replace('.', ',')} / peli.`);
+    else if (pm <= -2) dev.push(`Virheitä enemmän kuin pisteitä: +/− keskimäärin ${fmtPM(Math.round(pm * 10) / 10).toString().replace('.', ',')} / peli. Selvitä missä osa-alueessa virheet syntyvät.`);
+  }
+  const tb = d.tgp ? tx.blk / d.tgp : 0;
+  if (x.blk >= 3 && x.blk / n >= Math.max(1, tb * 1.5)) str.push(`Torjuu hyvin: ${x.blk} torjuntapistettä (${(x.blk / n).toFixed(1).replace('.', ',')} / peli).`);
+  if (x.net >= 3 && x.net / n >= 1) dev.push(`Verkkovirheitä ${x.net} (${(x.net / n).toFixed(1).replace('.', ',')} / peli). Tarkista askellus ja kosketus verkon tuntumassa.`);
+  // Kehitys: viimeiset 3 peliä vs aiemmat
+  if (n >= 4) {
+    const a = rows.slice(0, -3).reduce((o, r) => addC(o, r.c), {}), b = rows.slice(-3).reduce((o, r) => addC(o, r.c), {}), xa = calc(a), xb = calc(b), k = rows.slice(0, -3).length;
+    const cmp = (label, va, vb, na, nb, min) => { if (va == null || vb == null || na < min || nb < min) return; const df = vb - va; if (df >= 10) trd.push(`${label} noussut: ${P(va)} → ${P(vb)} (viimeiset 3 peliä vs. aiemmat).`); else if (df <= -10) trd.push(`${label} laskenut: ${P(va)} → ${P(vb)} (viimeiset 3 peliä vs. aiemmat). Tarkista syy: väsymys, pelipaikka tai rutiini.`); };
+    cmp('Vastaanotto-%', xa.recPct, xb.recPct, xa.rec, xb.rec, 6); cmp('Syöttö-%', xa.srvPct, xb.srvPct, xa.srv, xb.srv, 6);
+    if (d.hasInP && xa.att >= 6 && xb.att >= 6) cmp('Hyökkäystehokkuus', xa.attPct, xb.attPct, xa.att, xb.att, 6);
+    const pa = xa.pts / k, pb = xb.pts / 3;
+    if (pb - pa >= 1.5) trd.push(`Pisteitä enemmän: ${pa.toFixed(1).replace('.', ',')} → ${pb.toFixed(1).replace('.', ',')} / peli (viimeiset 3 vs. aiemmat).`);
+    else if (pa - pb >= 1.5) trd.push(`Pisteitä vähemmän: ${pa.toFixed(1).replace('.', ',')} → ${pb.toFixed(1).replace('.', ',')} / peli (viimeiset 3 vs. aiemmat).`);
+  }
+  return { str, dev, trd };
+}
+function barChart(rows, f, { pct = false, cls = '' } = {}) {
+  const W = 320, H = 110, top = 16, bot = 20, n = rows.length, vals = rows.map(r => f(r.x, r)), mx = pct ? 100 : Math.max(3, ...vals.map(v => v || 0));
+  const slot = Math.min(44, (W - 8) / Math.max(n, 1)), bw = Math.max(8, slot * .6), ox = (W - slot * n) / 2, base = H - bot, ph = base - top;
+  let out = `<svg viewBox="0 0 ${W} ${H}" role="img"><line class="ax" x1="0" y1="${base}" x2="${W}" y2="${base}"/>`;
+  vals.forEach((v, i) => {
+    const cx = ox + slot * i + slot / 2, g = rows[i].g, dm = /^\d{4}-(\d{2})-(\d{2})$/.exec(g.date || ''), lab = dm ? `${+dm[2]}.${+dm[1]}.` : '';
+    if (v == null) out += `<text x="${cx}" y="${base - 4}" text-anchor="middle">–</text>`;
+    else { const h = Math.max(v > 0 ? 2 : 0, v / mx * ph); out += `<rect class="bar ${cls}" x="${cx - bw / 2}" y="${base - h}" width="${bw}" height="${h}" rx="3"/><text class="v" x="${cx}" y="${base - h - 3}" text-anchor="middle">${pct ? v : v}</text>`; }
+    out += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${lab}</text>`;
+  });
+  return out + '</svg>';
+}
+function playerText(d, ins) {
+  const x = d.x, L = [`${d.p.num ? d.p.num + ' ' : ''}${d.p.name} – ${d.team?.name || ''}, kausi (${d.rows.length} peliä)`, '',
+    `Pisteet ${x.pts} (${(x.pts / Math.max(1, d.rows.length)).toFixed(1).replace('.', ',')}/peli), +/− ${fmtPM(x.pm)}`, `Syöttö ${x.srv ? P0(x.srvPct) + ' (' + x.srv + ' syöttöä, ' + x.ace + ' ässää)' : '–'}`, `Vastaanotto ${x.rec ? P0(x.recPct) + ' hyviä (' + x.rec + ' vast.)' : '–'}`, `Hyökkäyspisteet ${x.pt}, torjunnat ${x.blk}`, ''];
+  const sec = (t, a) => { L.push(t); (a.length ? a : ['Ei vielä tarpeeksi dataa.']).forEach(s => L.push('• ' + s)); L.push(''); };
+  sec('Vahvuudet', ins.str); sec('Kehityskohteet', ins.dev); if (ins.trd.length) sec('Kehitys', ins.trd);
+  return L.join('\n').trim();
+}
+const P0 = v => v == null ? '–' : v + ' %';
+function updatePlayer() {
+  if (S.view !== 'player') return;
+  const d = playerData(S.seasonTeam, S.plId), x = d.x, n = d.rows.length, ins = playerInsights(d);
+  const list = a => a.length ? a.map(s => `<li>${esc(s)}</li>`).join('') : '';
+  const none = t => `<li class="none">${t}</li>`;
+  const kpi = (v, l, sub = '') => `<div class="kpi"><b>${v}</b><span>${l}</span>${sub ? `<small>${sub}</small>` : ''}</div>`;
+  const trs = d.rows.map(r => { const y = r.x; return `<tr><td class="n">${esc(fmtDate(r.g.date).replace(/\.\d{4}$/, '.'))} ${esc(r.g.opponent || '')}</td><td><b>${y.pts}</b></td><td class="${y.pm > 0 ? 'v-ok' : y.pm < 0 ? 'v-bad' : ''}"><b>${fmtPM(y.pm)}</b></td><td class="g">${y.srv}</td><td>${y.ace}</td><td>${y.srvErr}</td><td>${pct(y.srvPct)}</td><td class="g">${y.pt}</td><td>${y.err}</td><td>${d.hasInP ? pct(y.attPct) : '–'}</td><td class="g">${y.blk}</td><td>${y.net}</td><td class="g">${y.rec}</td><td>${y.recErr}</td><td>${pct(y.recPct)}</td></tr>`; }).join('');
+  app.innerHTML = `<div class="page"><div class="top"><button class="ib" data-act="pl-back">←</button><div class="ttl">${esc(d.p.name)}<span class="sub">Kausi – ${esc(d.team?.name || '')}</span></div><button class="ib" data-act="pl-share" aria-label="Jaa yhteenveto">⇪</button></div>
+  ${n ? `<div class="pl">
+    <div class="hero"><div class="no">${esc(d.p.num || '–')}</div><div><h2>${esc(d.p.name)}</h2><div class="sub2">${n} ${n === 1 ? 'peli' : 'peliä'} tilastoitu · ${esc(d.team?.name || '')}</div></div></div>
+    <div class="kpis">${kpi(x.pts, 'Pisteet', (x.pts / n).toFixed(1).replace('.', ',') + ' / peli')}${kpi(fmtPM(x.pm), '+/−', fmtPM(Math.round(x.pm / n * 10) / 10).toString().replace('.', ',') + ' / peli')}${kpi(pct(x.srvPct), 'Syöttö', x.srv + ' syöttöä · ' + x.ace + ' ässää')}${kpi(pct(x.recPct), 'Vastaanotto', x.rec + ' vast.')}${kpi(d.hasInP ? pct(x.attPct) : x.pt, d.hasInP ? 'Hyökkäys-%' : 'Hyök. pist.', d.hasInP ? x.pt + ' pist. / ' + x.att : '')}${kpi(x.blk, 'Torjunnat', x.net ? x.net + ' verkkovirh.' : '')}</div>
+    <div class="two">
+      <div class="box str"><h3>Vahvuudet</h3><ul>${list(ins.str) || none('Ei vielä selkeitä vahvuuksia. Tulokset tarkentuvat kun yrityksiä kertyy (vähintään 10 per osa-alue).')}</ul></div>
+      <div class="box dev"><h3>Kehityskohteet</h3><ul>${list(ins.dev) || none('Ei vielä selkeitä kehityskohteita tilastojen perusteella.')}</ul></div>
+    </div>
+    <div class="box trd"><h3>Kehitys otteluittain</h3><ul>${list(ins.trd) || none(n < 4 ? 'Kehityssuunta näkyy kun pelejä on vähintään 4.' : 'Ei merkittäviä muutoksia viime peleissä.')}</ul></div>
+    <div class="charts">
+      <div class="box ch"><h3>Pisteet / peli</h3>${barChart(d.rows, y => y.pts)}</div>
+      <div class="box ch"><h3>Vastaanotto, hyvä %</h3>${barChart(d.rows, y => y.recPct, { pct: true, cls: 'b2' })}</div>
+      <div class="box ch"><h3>Syöttö, onnistui %</h3>${barChart(d.rows, y => y.srvPct, { pct: true, cls: 'b3' })}</div>
+    </div>
+    <div class="box" style="padding:0"><h3 style="padding:12px 12px 0;margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)">Ottelut</h3><div class="tw"><table class="st"><thead>
+      <tr><th class="n" rowspan="2">Peli</th><th rowspan="2">Pist.</th><th rowspan="2">+/−</th><th class="g" colspan="4">Syöttö</th><th class="g" colspan="3">Hyökkäys</th><th class="g" colspan="2">Torj.</th><th class="g" colspan="3">Vastaanotto</th></tr>
+      <tr><th class="g">Yht</th><th>Ässä</th><th>Virh.</th><th>%</th><th class="g">Piste</th><th>Virhe</th><th>Tehok.</th><th class="g">Torj.</th><th>Verkko</th><th class="g">Yht</th><th>Virh.</th><th>%</th></tr></thead>
+      <tbody>${trs}</tbody></table></div></div>
+    <div class="note" style="padding:0 2px">Vahvuudet ja kehityskohteet verrataan joukkueen kauden keskiarvoon, ja ne näytetään vasta kun osa-alueelta on vähintään 10 yritystä. Ne ovat keskustelun pohja, eivät tuomio: tilasto kertoo mitä pelissä tapahtui, valmentajan silmä kertoo miksi.</div>
+  </div>` : `<div class="note" style="padding:24px 12px">Pelaajalla ei ole vielä kirjauksia tällä kaudella.</div>`}</div>`;
+}
+act['pl-open'] = el => go(`#/player/${S.seasonTeam}/${encodeURIComponent(el.dataset.pid)}`);
+act['pl-back'] = () => go('#/season/' + S.seasonTeam);
+act['pl-share'] = async () => {
+  const d = playerData(S.seasonTeam, S.plId), text = playerText(d, playerInsights(d));
+  try { if (navigator.share) { await navigator.share({ text }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); toast('Yhteenveto kopioitu', 'ok'); }
+  catch { openModal(`<h3>Yhteenveto</h3><textarea rows="12" style="width:100%" readonly>${esc(text)}</textarea><div class="btns"><button class="btn pri" data-act="close">Sulje</button></div>`); }
+};
+
 act['season-csv'] = () => { const { team, rows, gp } = seasonData(); downloadCSV(`${team?.name}_kausi`, rows, gp); };
 
 /* =========================================================
