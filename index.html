@@ -1119,9 +1119,90 @@ async function shareCanvas(cv, name) {
   const url = URL.createObjectURL(blob);
   openModal(`<h3>Kuva valmis</h3><p class="mut small">Pidä kuvaa pohjassa ja tallenna se, tai paina Lataa. Jaa sitten WhatsAppissa.</p><img src="${url}" alt="" style="width:100%;border-radius:10px;border:1px solid var(--line)"><div class="btns"><button class="btn" data-act="close">Sulje</button><a class="btn pri" href="${url}" download="${fn}.png" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Lataa</a></div>`);
 }
-const imgBtns = () => `<div class="imgrow"><button class="btn" data-act="img-team">Kuva: joukkuetilastot</button><button class="btn" data-act="img-players">Kuva: pelaajat</button></div>`;
+const imgBtns = () => `<div class="imgrow"><button class="btn" data-act="img-team">Kuva: joukkue</button><button class="btn" data-act="img-players">Kuva: pelaajat</button><button class="btn" data-act="img-tour">Kuva: turnaus</button></div>`;
 act['img-team'] = async () => { const d = imgData(); toast('Tehdään kuvaa…', '', 900); await shareCanvas(await teamImage(d), d.fname + '_joukkue'); };
 act['img-players'] = async () => { const d = imgData(); toast('Tehdään kuvaa…', '', 900); await shareCanvas(await playersImage(d), d.fname + '_pelaajat'); };
+
+
+/* ---- Turnauksen yhteenvetokuva: kaikki joukkueen ottelut yhdeltä päivältä ---- */
+const WDAY = ['su', 'ma', 'ti', 'ke', 'to', 'pe', 'la'];
+const dayLabel = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); if (!m) return d || ''; return `${WDAY[new Date(+m[1], +m[2] - 1, +m[3]).getDay()]} ${+m[3]}.${+m[2]}.${m[1]}`; };
+function tourData(teamId, date, games) {
+  const team = S.teams.find(t => t.id === teamId);
+  const gs = games.filter(g => g.date === date && (g.finished || g.n > 0)).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  const agg = {}; for (const g of gs) for (const [pid, c] of Object.entries(g.tot || {})) if (sumC(c) > 0) agg[pid] = addC(agg[pid] || {}, c);
+  const rows = statRows(team, agg), R = rows.map(r => ({ p: r.p, x: calc(r.c) }));
+  const top = (key, fmt, sub) => R.filter(r => key(r) > 0).sort((a, b) => key(b) - key(a) || b.x.pts - a.x.pts).slice(0, 3).map(r => ({ p: r.p, v: fmt(r), sub: sub(r) }));
+  const res = gs.map(g => {
+    const r = resInfo(g), own = g.home && g.away ? isOwn(g.home) : true;
+    return { opp: (g.home && g.away ? (own ? g.away : g.home) : g.opponent) || '', time: g.time || '', r, win: r.any ? (r.w > r.l ? 1 : r.l > r.w ? -1 : 0) : null };
+  });
+  let w = 0, l = 0; res.forEach(o => { if (o.win === 1) w++; else if (o.win === -1) l++; });
+  return {
+    team, date, res, w, l, n: gs.length, venue: (gs.find(g => g.venue) || {}).venue || '',
+    boards: [
+      { t: 'Eniten pisteitä', rows: top(r => r.x.pts, r => r.x.pts + ' p', r => `${r.x.pt} hyök. · ${r.x.ace} ässää · ${r.x.blk} torj.`) },
+      { t: 'Torjujat', rows: top(r => r.x.blk, r => r.x.blk + ' kpl', r => `${r.x.blkSoft} vaimennusta`) },
+      { t: 'Ässäsyötöt', rows: top(r => r.x.ace, r => r.x.ace + ' kpl', r => `${r.x.srv} syöttöä`) }
+    ], fname: `${team?.name || 'turnaus'}_turnaus_${date}`
+  };
+}
+async function tourImage(d) {
+  const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1350; const x = cv.getContext('2d'); const logo = await loadLogo();
+  x.fillStyle = IC.bg; x.fillRect(0, 0, 1080, 1350);
+  imgHead(x, logo, 'TURNAUS', `${d.team?.name || ''} · ${dayLabel(d.date)}`, [d.venue, `${d.n} ${d.n === 1 ? 'ottelu' : 'ottelua'}`, d.w + d.l ? `${d.w} ${d.w === 1 ? 'voitto' : 'voittoa'}, ${d.l} ${d.l === 1 ? 'tappio' : 'tappiota'}` : ''].filter(Boolean).join(' · '));
+  // ottelut
+  txt(x, 'OTTELUT', 48, 358, 26, 800, IC.mut);
+  const top = 380, avail = 930 - top - 10, n = Math.max(1, d.res.length), rh = Math.min(150, avail / n), sc = Math.min(1.35, rh / 100);
+  d.res.forEach((o, i) => {
+    const y = top + i * rh, h = rh - 12, col = o.win === 1 ? IC.ok : o.win === -1 ? IC.bad : IC.mut;
+    x.fillStyle = '#fff'; rrect(x, 48, y, 984, h, 20); x.fill(); x.fillStyle = col; rrect(x, 48, y, 14, h, 7); x.fill();
+    txt(x, o.opp, 88, y + h / 2 - 2 * sc, Math.round(36 * sc), 800, IC.ink, 'left', 600);
+    const sets = o.r.any ? o.r.parts.join(', ') : 'tulosta ei kirjattu';
+    txt(x, [o.time, sets].filter(Boolean).join(' · '), 88, y + h / 2 + 34 * sc, Math.round(25 * sc), 500, IC.mut, 'left', 640);
+    txt(x, o.r.any ? `${o.r.w}–${o.r.l}` : '–', 1000, y + h / 2 + 22 * sc, Math.round(70 * sc), 800, col, 'right', 300);
+  });
+  if (!d.res.length) txt(x, 'Ei otteluita tälle päivälle', 88, top + 60, 30, 500, IC.mut);
+  // top 3 -taulut
+  const by = 950, bh = 340, bw = 312, gap = 24;
+  d.boards.forEach((b, k) => {
+    const bx = 48 + k * (bw + gap);
+    x.fillStyle = '#fff'; rrect(x, bx, by, bw, bh, 24); x.fill();
+    txt(x, b.t.toUpperCase(), bx + 24, by + 46, 23, 800, IC.pur, 'left', bw - 40);
+    if (!b.rows.length) { txt(x, 'Ei kirjauksia', bx + 24, by + 130, 26, 500, IC.mut); return; }
+    b.rows.forEach((r, i) => {
+      const y = by + 70 + i * 88;
+      x.fillStyle = i === 0 ? IC.cy : '#c9bfe0'; x.beginPath(); x.arc(bx + 40, y + 34, 18, 0, 7); x.fill();
+      txt(x, i + 1, bx + 40, y + 42, 22, 800, i === 0 ? '#fff' : IC.dpur, 'center');
+      txt(x, shortName(r.p), bx + 70, y + 28, 26, 800, IC.ink, 'left', bw - 90);
+      txt(x, r.v, bx + 70, y + 66, 34, 800, i === 0 ? IC.pur : IC.ink, 'left', bw - 90);
+    });
+  });
+  txt(x, 'JyväsLentis · Pelitilastot', 540, 1330, 24, 600, IC.mut, 'center');
+  return cv;
+}
+function tourGames(teamId) {
+  return new Promise(res => {
+    if (S.view === 'season' && S.seasonTeam === teamId && S.seasonGames.length) return res(S.seasonGames);
+    let done = false, un = null; const fin = gs => { if (done) return; done = true; try { un && un(); } catch {} res(gs); };
+    un = backend.watchAllGames(teamId, gs => { setTimeout(() => fin(gs), 0); }); setTimeout(() => fin([]), 6000);
+  });
+}
+async function tourMake(teamId, date, games) {
+  const d = tourData(teamId, date, games); if (!d.n) { toast('Päivälle ei ole pelejä', 'bad', 1800); return; }
+  toast('Tehdään kuvaa…', '', 900); await shareCanvas(await tourImage(d), d.fname);
+}
+act['img-tour'] = async () => {
+  const teamId = S.view === 'game' ? S.game.teamId : S.seasonTeam, games = await tourGames(teamId);
+  const days = {}; for (const g of games) if (g.date && (g.finished || g.n > 0)) (days[g.date] ||= []).push(g);
+  const dates = Object.keys(days).sort().reverse();
+  if (!dates.length) { toast('Ei pelattuja otteluita', 'bad', 1800); return; }
+  S.tourGames = games; S.tourTeam = teamId;
+  const pre = S.view === 'game' && days[S.game.date] ? S.game.date : null;
+  if (pre || dates.length === 1) return tourMake(teamId, pre || dates[0], games);
+  openModal(`<h3>Valitse turnauspäivä</h3><div class="chips" style="flex-direction:column;align-items:stretch">${dates.map(dt => `<button class="chip" style="text-align:left;border-radius:14px" data-act="tour-pick" data-d="${dt}"><b>${dayLabel(dt)}</b> · ${days[dt].length} ${days[dt].length === 1 ? 'ottelu' : 'ottelua'}<div class="small mut" style="font-weight:500">${days[dt].sort((a, b) => (a.time || '').localeCompare(b.time || '')).map(g => esc((g.home && g.away ? (isOwn(g.home) ? g.away : g.home) : g.opponent) || '')).join(', ')}</div></button>`).join('')}</div><div class="btns"><button class="btn" data-act="close">Peruuta</button></div>`);
+};
+act['tour-pick'] = el => { closeModal(); tourMake(S.tourTeam, el.dataset.d, S.tourGames); };
 
 /* =========================================================
    Kausitilastot
