@@ -154,6 +154,9 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .bd li{display:flex;align-items:baseline;gap:6px;font-size:15px}.bd li b{font-weight:800}.bd li .v{margin-left:auto;font-weight:800;color:var(--pri)}
 th.sortable{cursor:pointer;text-decoration:underline dotted}th.sorted{color:var(--pri)}
 @media (min-width:700px){.boards{grid-template-columns:repeat(4,1fr)}}
+.swtop{display:flex;gap:8px;align-items:stretch;margin-bottom:10px;position:sticky;top:-16px;z-index:2;background:var(--card);padding:6px 0}.swsum{flex:1;padding:8px 12px;border-radius:12px;background:var(--bg);font-size:14px;display:flex;align-items:center}.swtop .btn{flex:none;padding:0 16px}
+.sheet .btn[disabled]{opacity:.45}
+.chip small{margin-left:5px;font-size:11px;opacity:.75;font-weight:600}
 td.plk{cursor:pointer}td.plk b+span{text-decoration:underline dotted;text-underline-offset:3px}
 .pl{padding:8px 10px 24px;display:flex;flex-direction:column;gap:10px}
 .pl .hero{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
@@ -766,7 +769,7 @@ function courtHtml(g, crt, here) {
   const by = r => crt.filter(p => g.pos[p.id] === r).sort(byNum);
   const card = p => `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${POSN[g.pos[p.id]]}</small></button>`;
   const row = a => a.length ? `<div class="crow">${a.map(card).join('')}</div>` : '';
-  return `<div class="lurow">${scoreHtml(g)}<span class="lbtns"><button class="btn" data-act="swap">Vaihto</button><button class="btn" data-act="lineup">Kokoonpano</button></span></div><div class="court">${row([...by('P'), ...by('H')])}${row([...by('Y'), ...by('L')])}${row(by('K'))}</div>`;
+  return `<div class="lurow">${scoreHtml(g)}<span class="lbtns">${(g.posHist || []).length ? '<button class="btn" data-act="sw-undo" aria-label="Peru viimeisin vaihto">↶ Peru vaihto</button>' : ''}<button class="btn" data-act="swap">Vaihto</button><button class="btn" data-act="lineup">Kokoonpano</button></span></div><div class="court">${row([...by('P'), ...by('H')])}${row([...by('Y'), ...by('L')])}${row(by('K'))}</div>`;
 }
 const fmtT = ts => { const d = new Date(ts || Date.now()); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 function logHtml(team) {
@@ -823,6 +826,7 @@ function setMenu() {
   const g = S.game, n = g.set || 1, cur = g.finished ? (g.res?.['s' + n] || {}) : (g.res?.['s' + n] || {});
   openModal(`<h3>${g.finished ? 'Ottelu päättynyt' : 'Erä ' + n}</h3>
     ${g.finished ? `<p class="mut">${esc(resTxt(g)) || 'Lopputulosta ei kirjattu.'}</p><div class="btns"><button class="btn" data-act="close">Sulje</button><button class="btn pri" data-act="reopen">Jatka kirjausta</button></div>` : `
+    ${(() => { const mx = Math.max(...Object.keys(g.sets || {}).map(k => +k.slice(1) || 1)); return mx > n ? `<p class="small" style="color:var(--mid);margin:0 0 8px">Huom: kirjauksia on myös erässä ${mx}. Siirry sinne ‹ › -napeilla jos haluat päättää erän ${mx}.</p>` : ''; })()}
     <label class="f">Erän ${n} lopputulos (voi jättää tyhjäksi)</label>
     <div class="row"><div class="grow"><div class="small mut">JyLe</div><input type="tel" inputmode="numeric" id="sc-us" value="${cur.us ?? scv(g, n, 'us')}"></div><div style="padding-top:22px">–</div><div class="grow"><div class="small mut">${esc(g.opponent || 'Vastustaja')}</div><input type="tel" inputmode="numeric" id="sc-opp" value="${cur.opp ?? scv(g, n, 'opp')}"></div></div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
@@ -844,8 +848,24 @@ act['sc-save'] = () => { const g = S.game, n = g.set || 1, s = scoreOf(g, n), a 
 act['st-sort'] = el => { S.sortKey = S.sortKey === el.dataset.k ? null : el.dataset.k; refresh(); };
 act['sm-prev'] = () => { setSet((S.game.set || 1) - 1); setMenu(); };
 act['sm-next'] = () => { setSet((S.game.set || 1) + 1); setMenu(); };
-act['set-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, set: n + 1 }); toast('Erä ' + n + ' päättyi', 'ok'); if (Object.keys(S.game.pos || {}).length) setLuModal(); };
-act['match-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); S.sel = null; patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, finished: true, end: Date.now() }); toast('Ottelu päättyi', 'ok'); };
+act['set-end'] = () => { const g = S.game, n = g.set || 1, sc = fillScore(g, n, readScore()); closeModal(); patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, set: n + 1, posHist: [] }); toast('Erä ' + n + ' päättyi', 'ok'); if (Object.keys(S.game.pos || {}).length) setLuModal(); };
+// jos lomakkeen tulos on tyhjä, käytetään jo kirjattua tulosta tai kirjauksista laskettua pistetilannetta
+function fillScore(g, n, sc) {
+  if (sc.us != null && sc.opp != null) return sc;
+  const cur = g.res?.['s' + n]; if (cur && cur.us != null && cur.opp != null) return { us: cur.us, opp: cur.opp };
+  const c = scoreOf(g, n); return c.us + c.opp > 0 ? { us: c.us, opp: c.opp } : sc;
+}
+act['match-end'] = () => {
+  const g = S.game, n = g.set || 1, now = Date.now(); const sc = readScore(); closeModal(); S.sel = null;
+  const maxS = Math.max(n, ...Object.keys(g.sets || {}).map(k => +k.slice(1) || 1), ...Object.keys(g.man || {}).map(k => +k.slice(1) || 1));
+  const f = { finished: true, end: now, set: maxS };
+  for (let i = 1; i <= maxS; i++) {
+    const cur = g.res?.['s' + i], has = cur && cur.us != null && cur.opp != null;
+    if (i === n) f['res.s' + i] = { ...fillScore(g, i, sc), end: now };
+    else if (!has) { const c = scoreOf(g, i); if (c.us + c.opp > 0) f['res.s' + i] = { us: c.us, opp: c.opp, end: now }; }
+  }
+  patchLocal(f); toast('Ottelu päättyi', 'ok');
+};
 act.reopen = () => { closeModal(); patchLocal({ finished: false }); };
 act.claim = () => {
   const g = S.game;
@@ -859,6 +879,7 @@ function gameMenu() {
   const g = S.game;
   openModal(`<h3>Valikko</h3>
     <button class="btn" style="width:100%;margin-bottom:8px" data-act="lineup">Ketkä ovat mukana tässä pelissä</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" data-act="set-menu">Päätä erä / ottelu</button>
     <button class="btn" style="width:100%;margin-bottom:8px" data-act="game-csv">Lataa pelin tilastot (CSV)</button>
     <button class="btn bad" style="width:100%;margin-bottom:8px" data-act="game-del-ask">Nollaa peli (poista kirjaukset)</button>
     <div class="btns"><button class="btn pri" data-act="close">Sulje</button></div>`);
@@ -918,24 +939,45 @@ function setLuModal() {
   const sum = [...'PHYLK'].map(r => { const nm = ps.filter(p => pos[p.id] === r).sort(byNum).map(p => `${esc(p.num)} ${esc(surname(p.name))}`); return nm.length ? `<div><b>${POSN[r]}</b> ${nm.join(', ')}</div>` : ''; }).join('');
   openModal(`<h3>Erä ${g.set || 1}: aloituskokoonpano</h3><p class="mut small">Edellisen erän kokoonpano:</p><div class="small" style="margin-bottom:12px">${sum}</div><div class="btns"><button class="btn" data-act="wiz-restart">Valitse uudelleen</button><button class="btn pri" data-act="close">Sama kokoonpano</button></div>`);
 }
+const swLab = p => `${esc(p.num)} ${esc(surname(p.name))}`;
 function swapModal() {
-  const g = S.game, pos = g.pos || {}, ps = presentPs(), sel = S.swap, order = 'PHYLK';
-  const chip = p => `<button class="chip ${sel === p.id ? 'on' : ''}" data-act="swap-pick" data-id="${p.id}">${esc(p.num)} ${esc(surname(p.name))}${pos[p.id] ? `<small>${POSN[pos[p.id]]}</small>` : ''}</button>`;
-  const on = ps.filter(p => pos[p.id] && pos[p.id] !== 'L').sort((a, b) => order.indexOf(pos[a.id]) - order.indexOf(pos[b.id]) || byNum(a, b)), bench = ps.filter(p => !pos[p.id]);
-  openModal(`<h3>Vaihto</h3><p class="mut small">${sel ? 'Valitse nyt pelaaja, jonka kanssa vaihdetaan.' : 'Valitse ensin pelaaja, joka lähtee. Valitse sitten tilalle tuleva: hän ottaa kentällä hänen paikkansa.'}</p>
-    <div class="small mut" style="margin-bottom:4px">Kentällä</div><div class="chips">${on.map(chip).join('') || '<span class="mut small">Kuusikkoa ei ole asetettu</span>'}</div>
-    <div class="small mut" style="margin:10px 0 4px">Penkillä</div><div class="chips">${bench.map(chip).join('') || '<span class="mut small">Ei vaihtopelaajia</span>'}</div>
+  const g = S.game, pos = g.pos || {}, ps = presentPs(), sw = S.swap || (S.swap = { out: null, in: null }), order = 'PHYLK';
+  const court = ps.filter(p => pos[p.id] && pos[p.id] !== 'L').sort((a, b) => order.indexOf(pos[a.id]) - order.indexOf(pos[b.id]) || byNum(a, b)), bench = ps.filter(p => !pos[p.id]);
+  if (sw.out && !court.some(p => p.id === sw.out)) sw.out = null;
+  if (sw.in && !ps.some(p => p.id === sw.in)) sw.in = null;
+  const outChip = p => `<button class="chip ${sw.out === p.id ? 'on' : ''}" data-act="sw-out" data-id="${p.id}">${swLab(p)}<small>${POSN[pos[p.id]]}</small></button>`;
+  const inChip = p => `<button class="chip ${sw.in === p.id ? 'on' : ''}" data-act="sw-in" data-id="${p.id}">${swLab(p)}${pos[p.id] ? `<small>${POSN[pos[p.id]]}</small>` : ''}</button>`;
+  const po = ps.find(p => p.id === sw.out), pi = ps.find(p => p.id === sw.in);
+  const hist = g.posHist || [], last = hist[hist.length - 1];
+  const sum = po && pi ? `<b>${swLab(po)}</b> ${pos[pi.id] ? '⇄' : '→ penkille, tilalle'} <b>${swLab(pi)}</b>` : po ? `<b>${swLab(po)}</b> lähtee. Valitse tilalle tuleva.` : 'Valitse ensin kentältä lähtevä pelaaja.';
+  const others = court.filter(p => p.id !== sw.out);
+  openModal(`<h3>Vaihto</h3>
+    <div class="swtop"><div class="swsum">${sum}</div><button class="btn pri" data-act="sw-do" ${po && pi ? '' : 'disabled'}>Tee vaihto</button></div>
+    <div class="small mut" style="margin-bottom:4px">1. Lähtee kentältä</div><div class="chips">${court.map(outChip).join('') || '<span class="mut small">Kuusikkoa ei ole asetettu</span>'}</div>
+    <div class="small mut" style="margin:10px 0 4px">2. Tulee tilalle (penkiltä)</div><div class="chips">${bench.map(inChip).join('') || '<span class="mut small">Ei vaihtopelaajia</span>'}</div>
+    ${sw.out && others.length ? `<div class="small mut" style="margin:10px 0 4px">tai vaihda paikkaa kentällä olevan kanssa</div><div class="chips">${others.map(inChip).join('')}</div>` : ''}
+    <div class="btns"><button class="btn" data-act="sw-undo" ${last ? '' : 'disabled'}>↶ Peru vaihto${last ? ': ' + esc(last.d) : ''}</button></div>
     <p class="small mut" style="margin-top:10px">Libero pysyy liberona koko erän; roolit valitaan uudelleen seuraavan erän alussa.</p>
     <div class="btns"><button class="btn" data-act="wiz-restart">Valitse kuusikko uudelleen</button><button class="btn pri" data-act="close">Sulje</button></div>`);
 }
-act.swap = () => { S.swap = null; swapModal(); };
-act['swap-pick'] = el => {
-  const id = el.dataset.id, g = S.game;
-  if (!S.swap || S.swap === id) { S.swap = S.swap === id ? null : id; swapModal(); return; }
-  const a = S.swap, np = { ...(g.pos || {}) }, ra = np[a], rb = np[id];
-  if ((!ra && !rb) || ra === 'L' || rb === 'L') { S.swap = id; swapModal(); return; }
-  delete np[a]; delete np[id]; if (rb) np[a] = rb; if (ra) np[id] = ra;
-  S.swap = null; closeModal(); g.pos = np; backend.patchGame(g.id, { pos: np }); if (S.sel && !np[S.sel]) S.sel = null; updateGame(); toast('Vaihto tehty', 'ok', 900);
+act.swap = () => { S.swap = { out: null, in: null }; swapModal(); };
+act['sw-out'] = el => { const sw = S.swap || (S.swap = { out: null, in: null }); sw.out = sw.out === el.dataset.id ? null : el.dataset.id; if (sw.in === sw.out) sw.in = null; swapModal(); };
+act['sw-in'] = el => { const sw = S.swap || (S.swap = { out: null, in: null }); sw.in = sw.in === el.dataset.id ? null : el.dataset.id; swapModal(); };
+act['sw-do'] = () => {
+  const g = S.game, sw = S.swap; if (!sw?.out || !sw?.in) return;
+  const ps = presentPs(), po = ps.find(p => p.id === sw.out), pi = ps.find(p => p.id === sw.in), np = { ...(g.pos || {}) }, ra = np[sw.out], rb = np[sw.in];
+  if (!ra || ra === 'L' || rb === 'L') { toast('Liberoa ei vaihdeta kesken erän', 'bad', 1800); return; }
+  const prev = { ...(g.pos || {}) };
+  delete np[sw.out]; delete np[sw.in]; if (rb) np[sw.out] = rb; np[sw.in] = ra;
+  const d = `${po?.num} ${surname(po?.name)} ${rb ? '⇄' : '→'} ${pi?.num} ${surname(pi?.name)}`;
+  const hist = [...(g.posHist || []), { pos: prev, d, set: g.set || 1 }].slice(-10);
+  S.swap = null; closeModal(); if (S.sel && !np[S.sel]) S.sel = null;
+  patchLocal({ pos: np, posHist: hist }); toast('Vaihto tehty: ' + d, 'ok', 1600);
+};
+act['sw-undo'] = () => {
+  const g = S.game, hist = [...(g.posHist || [])], last = hist.pop(); if (!last) return;
+  S.swap = null; closeModal(); if (S.sel && !last.pos[S.sel]) S.sel = null;
+  patchLocal({ pos: last.pos, posHist: hist }); toast('Vaihto peruttu: ' + last.d, 'ok', 1600);
 };
 
 /* =========================================================
