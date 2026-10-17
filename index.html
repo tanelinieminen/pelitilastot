@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#4a2378">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Pelitilastot">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23fff3b8'/%3E%3Cg fill='none' stroke='%231257d6' stroke-width='3' stroke-linecap='round'%3E%3Cg%3E%3Cpath d='M32 2C20 10 18 24 32 32'/%3E%3Cpath d='M42 4.5C34 12 36 22 44 27'/%3E%3C/g%3E%3Cg transform='rotate%28120 32 32%29'%3E%3Cpath d='M32 2C20 10 18 24 32 32'/%3E%3Cpath d='M42 4.5C34 12 36 22 44 27'/%3E%3C/g%3E%3Cg transform='rotate%28240 32 32%29'%3E%3Cpath d='M32 2C20 10 18 24 32 32'/%3E%3Cpath d='M42 4.5C34 12 36 22 44 27'/%3E%3C/g%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='30' fill='none' stroke='%231257d6' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
 <title>Pelitilastot</title>
@@ -129,7 +131,8 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 /* kuusikkonäkymä: passari+hakkuri / YP+libero / keskitorjujat, korttien koko skaalautuu tilaan */
 .lbtns{display:flex;gap:6px}
 .chip small{font-size:11px;opacity:.7;margin-left:4px;font-weight:600}
-.court{display:flex;flex-direction:column;gap:8px;padding:8px;flex:1 1 0;min-height:200px;container-type:size}
+.court{display:flex;flex-direction:column;gap:6px;padding:6px 8px;flex:1 1 0;min-height:150px;container-type:size}
+@container (max-height:215px){.court .pc small{display:none}}
 .crow{display:flex;justify-content:center;gap:8px;flex:1 1 0;min-height:0}
 .court .pc{flex:1 1 0;min-width:0;max-width:34%;max-height:none;min-height:0}
 .court .pc b{font-size:clamp(20px,calc(100cqh / 3 * .44),42px)}
@@ -137,6 +140,20 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .court .pc small{display:block;font-size:clamp(10px,calc(100cqh / 3 * .15),13px)}
 .court .pc i{display:none}
 /* stats */
+.score{display:flex;align-items:center;gap:6px}
+.sbtn{width:40px;height:36px;border-radius:10px;font-size:22px;font-weight:800;line-height:1;background:var(--pri);color:#fff;padding:0}
+.sbtn.opp{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.sv{background:transparent;display:flex;align-items:center;gap:5px;min-width:64px;justify-content:center;font-size:21px;font-weight:800;padding:0 2px;height:36px}
+.sv i{font-style:normal;opacity:.45;font-weight:600}
+.lbtns .btn{padding:4px 9px;font-size:13px}
+.imgrow{display:flex;gap:8px;padding:8px 10px 4px}.imgrow .btn{flex:1;min-height:42px;font-size:14px;padding:6px 8px}
+.boards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:8px 10px 0}
+.bd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.bd h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.bd ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.bd li{display:flex;align-items:baseline;gap:6px;font-size:15px}.bd li b{font-weight:800}.bd li .v{margin-left:auto;font-weight:800;color:var(--pri)}
+th.sortable{cursor:pointer;text-decoration:underline dotted}th.sorted{color:var(--pri)}
+@media (min-width:700px){.boards{grid-template-columns:repeat(4,1fr)}}
 .tw{overflow:auto;padding:8px}
 table.st{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 table.st th,table.st td{padding:8px 7px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
@@ -370,6 +387,15 @@ function calc(c) {
   };
 }
 const addC = (a, b) => { const o = { ...a }; for (const t of TYPES) if (b && b[t]) o[t] = (o[t] || 0) + b[t]; return o; };
+// pistetilanne: lasketaan kirjauksista (meille pisteet, vastustajalle meidän virheet) + käsin lisätyt (g.man)
+function scoreOf(g, n) {
+  let us = 0, opp = 0;
+  for (const c of Object.values(g.sets?.['s' + n] || {})) { us += g0(c, 'pt') + g0(c, 'srv_ace') + g0(c, 'blk'); opp += g0(c, 'err') + g0(c, 'srv_err') + g0(c, 'net') + g0(c, 'rec_err'); }
+  const m = g.man?.['s' + n] || {};
+  return { us: Math.max(0, us + (m.us || 0)), opp: Math.max(0, opp + (m.opp || 0)), aus: us, aopp: opp };
+}
+const scv = (g, n, k) => { const s = scoreOf(g, n); return s.us + s.opp > 0 ? s[k] : ''; };
+const scoreHtml = g => { const s = scoreOf(g, g.set || 1); return `<span class="score"><button class="sbtn" data-act="sc-add" data-side="us" aria-label="Piste JyLelle">+</button><button class="sv" data-act="sc-edit" aria-label="Pistetilanne"><b>${s.us}</b><i>–</i><b>${s.opp}</b></button><button class="sbtn opp" data-act="sc-add" data-side="opp" aria-label="Piste vastustajalle">+</button></span>`; };
 const pct = v => v === null ? '–' : v + '%';
 const fmtPM = n => n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0';
 function statRows(team, countsByPid) {
@@ -381,6 +407,8 @@ function statRows(team, countsByPid) {
 }
 function statTable(rows, { games } = {}) {
   if (!rows.length) return `<div class="note" style="padding:24px 12px">Ei kirjauksia vielä.</div>`;
+  if (S.sortKey && S.sortKey !== 'num') { const val = r => { const v = calc(r.c)[S.sortKey]; return v == null ? -1e9 : v; }; rows = [...rows].sort((a, b) => val(b) - val(a)); }
+  const sth = (k, label, cls = '', extra = '') => `<th class="${cls} sortable ${S.sortKey === k ? 'sorted' : ''}" ${extra} data-act="st-sort" data-k="${k}">${label}</th>`;
   let tot = {}; rows.forEach(r => { tot = addC(tot, r.c); });
   const hasIn = g0(tot, 'att_in') > 0;   // Pelissä-nappi käytössä: muuten hyökkäysyritysten määrää ei tiedetä
   const cell = (c, name) => {
@@ -391,8 +419,8 @@ function statTable(rows, { games } = {}) {
       <td class="g">${x.rec}</td><td class="${x.recGood ? 'v-ok' : ''}">${x.recGood}</td><td>${x.recMid}</td><td class="${x.recErr ? 'v-bad' : ''}">${x.recErr}</td><td>${pct(x.recPct)}</td>`;
   };
   return `<div class="tw"><table class="st"><thead>
-    <tr><th class="n" rowspan="2">Pelaaja</th>${games ? '<th rowspan="2">Pelit</th>' : ''}<th rowspan="2">Pist.</th><th rowspan="2">+/−</th><th class="g" colspan="5">Syöttö</th><th class="g" colspan="5">Hyökkäys</th><th class="g" colspan="3">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
-    <tr><th class="g">Yht</th><th>Onn.</th><th>Ässä</th><th>Virh.</th><th>%</th><th class="g">Yht</th><th>Piste</th><th>Pelissä</th><th>Virhe</th><th>Tehok.</th><th class="g">Torjunta</th><th>Vaimennus</th><th>Verkkovirhe</th><th class="g">Yht</th><th>Hyvä</th><th>Kesk. ei mahd.</th><th>Virh.</th><th>%</th></tr></thead>
+    <tr>${sth('num', 'Pelaaja', 'n', 'rowspan="2"')}${games ? '<th rowspan="2">Pelit</th>' : ''}${sth('pts', 'Pist.', '', 'rowspan="2"')}${sth('pm', '+/−', '', 'rowspan="2"')}<th class="g" colspan="5">Syöttö</th><th class="g" colspan="5">Hyökkäys</th><th class="g" colspan="3">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
+    <tr><th class="g">Yht</th><th>Onn.</th>${sth('ace', 'Ässä')}<th>Virh.</th>${sth('srvPct', '%')}<th class="g">Yht</th>${sth('pt', 'Piste')}<th>Pelissä</th><th>Virhe</th><th>Tehok.</th>${sth('blk', 'Torjunta', 'g')}<th>Vaimennus</th><th>Verkkovirhe</th><th class="g">Yht</th><th>Hyvä</th><th>Kesk. ei mahd.</th><th>Virh.</th>${sth('recPct', '%')}</tr></thead>
     <tbody>${rows.map(r => `<tr><td class="n"><b>${esc(r.p.num)}</b> ${esc(r.p.name)}</td>${games ? `<td>${games[r.p.id] || 0}</td>` : ''}${cell(r.c)}</tr>`).join('')}</tbody>
     <tfoot><tr><td class="n">Yhteensä</td>${games ? '<td></td>' : ''}${cell(tot)}</tr></tfoot></table></div>
     <div class="note">Hyökkäys: Yht = piste + pelissä + virhe; Tehok. = (pisteet − virheet) / kaikki hyökkäykset (näkyy kun “Pelissä”-nappia on käytetty). Pist. = hyökkäyspisteet + ässät + torjunnat. Syöttö-% = (onnistui + ässä) / kaikki syötöt. Vastaanotto-% = hyvät / kaikki vastaanotot. “Kesk. ei mahd.” = keskihyökkäys ei mahdollinen. +/− = pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe).</div>`;
@@ -489,6 +517,7 @@ function updateHome() {
       ${window.OTTELUT_HAETTU ? `<div class="mut small" style="margin:-2px 0 8px">Ottelulista haettu tulospalvelusta ${fmtDate(window.OTTELUT_HAETTU)}</div>` : ''}
       <div class="row" style="margin-top:10px"><button class="btn pri grow" data-act="season">Kausitilastot</button><button class="btn grow" data-act="team-edit">Pelaajat (${t.players.filter(p => !p.hidden).length})</button></div>
       ${past.length ? `<h2>Pelatut ottelut</h2>${past.map(g => `<button class="gitem" data-act="game-open" data-id="${g.id}"><b>${esc(g.home && g.away ? g.home + ' – ' + g.away : g.opponent || 'Peli')}</b><div class="mut small">${fmtDate(g.date)}${g.finished ? ' · päättynyt' : ''}${resTxt(g) ? ' · ' + esc(resTxt(g)) : ''} · ${g.n || 0} kirjausta</div></button>`).join('')}` : ''}`}
+      ${isStandalone() ? '' : `<button class="btn" style="width:100%;margin-top:14px" data-act="install">Asenna kotivalikkoon</button>`}
     </div></div>`;
 }
 act['team-sel'] = el => { S.teamId = el.dataset.id; LS.set('bs_team', S.teamId); cleanup(); mountHome(); };
@@ -617,7 +646,7 @@ function updateGame() {
     const gc = ps.length <= 6 ? 3 : ps.length <= 16 ? 4 : 5, gr = Math.max(1, Math.ceil(ps.length / gc));
     const posd = g.pos || {}, crt = roster.filter(p => posd[p.id] && !(g.absent || []).includes(p.id));
     if (crt.length) main.innerHTML = courtHtml(g, crt, here); else
-    main.innerHTML = ps.length ? `<div class="lurow"><span>Mukana <b>${here}/${roster.length}</b> pelaajaa</span><button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid c${gc}${gr >= 4 ? ' dense' : ''}" style="--cols:${gc};--rows:${gr}">${ps.map(p => {
+    main.innerHTML = ps.length ? `<div class="lurow">${scoreHtml(g)}<button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid c${gc}${gr >= 4 ? ' dense' : ''}" style="--cols:${gc};--rows:${gr}">${ps.map(p => {
       const c = g.tot?.[p.id], x = calc(c), meta = sumC(c) ? `S${x.srv} P${x.pt} V${x.rec}` : '';
       return `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${esc(firstname(p.name))}</small><i>${meta}</i></button>`;
     }).join('')}</div>` : `<div class="wrap mut">Ei pelaajia. Lisää pelaajat etusivun “Pelaajat”-napista tai valikon kautta valitse kokoonpano.</div>`;
@@ -640,6 +669,7 @@ function updateGame() {
     const f = S.setFilter === 'all' || +S.setFilter > maxSet ? 'all' : S.setFilter;
     const counts = f === 'all' ? (g.tot || {}) : (g.sets?.['s' + f] || {});
     main.innerHTML = `<div class="chips" style="padding:8px 10px 0"><button class="chip ${f === 'all' ? 'on' : ''}" data-act="setf" data-id="all">Koko peli</button>${Array.from({ length: maxSet }, (_, i) => `<button class="chip ${f == i + 1 ? 'on' : ''}" data-act="setf" data-id="${i + 1}">Erä ${i + 1}${(() => { const r = g.res?.['s' + (i + 1)]; return r && r.us != null && r.opp != null ? ' (' + r.us + '–' + r.opp + ')' : ''; })()}</button>`).join('')}</div>`
+      + imgBtns()
       + statTable(statRows(team, counts))
       + `<h2 style="padding:0 12px">Viimeisimmät</h2><div class="evl">${S.events.slice(0, 15).map(e => { const p = team?.players.find(x => x.id === e.pid); return `<div><span><b>#${esc(p?.num ?? '?')}</b> ${esc(surname(p?.name))} · ${LABEL[e.type]}</span><span class="mut">erä ${e.set}${e.by ? ' · ' + esc(e.by) : ''}</span></div>`; }).join('') || '<div class="mut">Ei kirjauksia.</div>'}</div>`;
   }
@@ -651,7 +681,7 @@ function courtHtml(g, crt, here) {
   const by = r => crt.filter(p => g.pos[p.id] === r).sort(byNum);
   const card = p => `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${POSN[g.pos[p.id]]}</small></button>`;
   const row = a => a.length ? `<div class="crow">${a.map(card).join('')}</div>` : '';
-  return `<div class="lurow"><span>Kentällä <b>${crt.length}</b> · penkillä <b>${Math.max(0, here - crt.length)}</b></span><span class="lbtns"><button class="btn" data-act="swap">Vaihto</button><button class="btn" data-act="lineup">Kokoonpano</button></span></div><div class="court">${row([...by('P'), ...by('H')])}${row([...by('Y'), ...by('L')])}${row(by('K'))}</div>`;
+  return `<div class="lurow">${scoreHtml(g)}<span class="lbtns"><button class="btn" data-act="swap">Vaihto</button><button class="btn" data-act="lineup">Kokoonpano</button></span></div><div class="court">${row([...by('P'), ...by('H')])}${row([...by('Y'), ...by('L')])}${row(by('K'))}</div>`;
 }
 const fmtT = ts => { const d = new Date(ts || Date.now()); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 function logHtml(team) {
@@ -709,7 +739,7 @@ function setMenu() {
   openModal(`<h3>${g.finished ? 'Ottelu päättynyt' : 'Erä ' + n}</h3>
     ${g.finished ? `<p class="mut">${esc(resTxt(g)) || 'Lopputulosta ei kirjattu.'}</p><div class="btns"><button class="btn" data-act="close">Sulje</button><button class="btn pri" data-act="reopen">Jatka kirjausta</button></div>` : `
     <label class="f">Erän ${n} lopputulos (voi jättää tyhjäksi)</label>
-    <div class="row"><div class="grow"><div class="small mut">JyLe</div><input type="tel" inputmode="numeric" id="sc-us" value="${cur.us ?? ''}"></div><div style="padding-top:22px">–</div><div class="grow"><div class="small mut">${esc(g.opponent || 'Vastustaja')}</div><input type="tel" inputmode="numeric" id="sc-opp" value="${cur.opp ?? ''}"></div></div>
+    <div class="row"><div class="grow"><div class="small mut">JyLe</div><input type="tel" inputmode="numeric" id="sc-us" value="${cur.us ?? scv(g, n, 'us')}"></div><div style="padding-top:22px">–</div><div class="grow"><div class="small mut">${esc(g.opponent || 'Vastustaja')}</div><input type="tel" inputmode="numeric" id="sc-opp" value="${cur.opp ?? scv(g, n, 'opp')}"></div></div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
       ${n < 5 ? `<button class="btn pri" data-act="set-end">Erä ${n} päättyi, aloita erä ${n + 1}</button>` : ''}
       <button class="btn ${n < 5 ? '' : 'pri'}" data-act="match-end">Ottelu päättyi</button>
@@ -718,6 +748,15 @@ function setMenu() {
     <div class="btns"><button class="btn" data-act="close">Sulje</button></div>`}`);
 }
 act['set-menu'] = setMenu;
+act['sc-add'] = el => { const g = S.game; if (g.finished) return; const n = g.set || 1, side = el.dataset.side, v = ((g.man?.['s' + n] || {})[side] || 0) + 1; patchLocal({ ['man.s' + n + '.' + side]: v }); };
+act['sc-edit'] = () => {
+  const g = S.game, n = g.set || 1, s = scoreOf(g, n);
+  openModal(`<h3>Pistetilanne, erä ${n}</h3><p class="mut small">Pisteet lasketaan kirjauksista: meille hyökkäyspisteet, ässät ja torjunnat, vastustajalle meidän virheemme. Muut pisteet (esim. vastustajan virheet tai heidän omat pisteensä) lisätään +-napeilla. Korjaa tilanne tästä.</p>
+    <div class="row"><div class="grow"><div class="small mut">JyLe</div><input type="tel" inputmode="numeric" id="scm-us" value="${s.us}"></div><div style="padding-top:22px">–</div><div class="grow"><div class="small mut">${esc(g.opponent || 'Vastustaja')}</div><input type="tel" inputmode="numeric" id="scm-opp" value="${s.opp}"></div></div>
+    <div class="btns"><button class="btn" data-act="close">Peruuta</button><button class="btn pri" data-act="sc-save">Tallenna</button></div>`);
+};
+act['sc-save'] = () => { const g = S.game, n = g.set || 1, s = scoreOf(g, n), a = parseInt($('#scm-us').value, 10), b = parseInt($('#scm-opp').value, 10); closeModal(); if (isNaN(a) || isNaN(b)) return; patchLocal({ ['man.s' + n]: { us: a - s.aus, opp: b - s.aopp } }); };
+act['st-sort'] = el => { S.sortKey = S.sortKey === el.dataset.k ? null : el.dataset.k; refresh(); };
 act['sm-prev'] = () => { setSet((S.game.set || 1) - 1); setMenu(); };
 act['sm-next'] = () => { setSet((S.game.set || 1) + 1); setMenu(); };
 act['set-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, set: n + 1 }); toast('Erä ' + n + ' päättyi', 'ok'); if (Object.keys(S.game.pos || {}).length) setLuModal(); };
@@ -736,12 +775,12 @@ function gameMenu() {
   openModal(`<h3>Valikko</h3>
     <button class="btn" style="width:100%;margin-bottom:8px" data-act="lineup">Ketkä ovat mukana tässä pelissä</button>
     <button class="btn" style="width:100%;margin-bottom:8px" data-act="game-csv">Lataa pelin tilastot (CSV)</button>
-    <button class="btn bad" style="width:100%;margin-bottom:8px" data-act="game-del-ask">Poista peli</button>
+    <button class="btn bad" style="width:100%;margin-bottom:8px" data-act="game-del-ask">Nollaa peli (poista kirjaukset)</button>
     <div class="btns"><button class="btn pri" data-act="close">Sulje</button></div>`);
 }
 act.gmenu = gameMenu;
 act['game-csv'] = () => { const g = S.game, team = S.teams.find(t => t.id === g.teamId); downloadCSV(`${team?.name}_${g.opponent}_${g.date}`, statRows(team, g.tot || {})); };
-act['game-del-ask'] = () => confirmModal('Poistetaanko peli ja kaikki sen kirjaukset pysyvästi?', 'game-del');
+act['game-del-ask'] = () => confirmModal('Nollataanko peli? Kaikki kirjaukset, kokoonpano ja pistetilanne poistetaan pysyvästi, ja peli palaa Aloita-tilaan etusivulla.', 'game-del');
 act['game-del'] = async () => { const id = S.game.id; closeModal(); try { await backend.deleteGame(id); } catch (e) { toast('Poisto epäonnistui', 'bad'); return; } go('#/'); };
 function lineupModal() {
   const g = S.game, team = S.teams.find(t => t.id === g.teamId), ab = new Set(g.absent || []);
@@ -815,6 +854,142 @@ act['swap-pick'] = el => {
 };
 
 /* =========================================================
+   Kuvat (WhatsApp): joukkuetilastot ja pelaajalistaus
+   ========================================================= */
+const IC = { pur: '#5b2d8c', dpur: '#3d1b63', cy: '#00a9dd', ink: '#1d1633', mut: '#6b6580', bg: '#f4f1f9', ok: '#0f8a5f', mid: '#c27a00', bad: '#c42b2b' };
+const loadLogo = () => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = 'logo.png'; });
+function rrect(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+function txt(x, s, a, b, size, weight, color, align = 'left', maxW) {
+  x.font = `${weight} ${size}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`; x.fillStyle = color; x.textAlign = align; x.textBaseline = 'alphabetic';
+  if (maxW) x.fillText(String(s), a, b, maxW); else x.fillText(String(s), a, b);
+}
+function wrapLines(x, s, size, weight, maxW) {
+  x.font = `${weight} ${size}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  const out = []; let line = '';
+  for (const w of String(s).split(' ')) { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; }
+  if (line) out.push(line); return out;
+}
+function imgHead(x, logo, kicker, title, sub) {
+  const g = x.createLinearGradient(0, 0, 1080, 300); g.addColorStop(0, IC.dpur); g.addColorStop(.7, IC.pur); g.addColorStop(1, '#6d3aa6');
+  x.fillStyle = g; x.fillRect(0, 0, 1080, 300); x.fillStyle = IC.cy; x.fillRect(0, 300, 1080, 8);
+  if (logo) { const h = 120, w = h * logo.width / logo.height; x.drawImage(logo, 48, 34, w, h); }
+  txt(x, kicker, 1032, 92, 28, 800, IC.cy, 'right');
+  txt(x, title, 48, 228, 54, 800, '#fff', 'left', 984);
+  txt(x, sub, 48, 276, 32, 500, 'rgba(255,255,255,.85)', 'left', 984);
+}
+const toneCol = (v, ok, mid) => v == null ? IC.mut : v >= ok ? IC.ok : v >= mid ? IC.mid : IC.bad;
+function imgInsights(x) {
+  const good = [], bad = [];
+  if (x.srv >= 8) {
+    if (x.srvPct >= 85) good.push(`Syöttö varma: ${x.srvPct} % ilman virhettä`); else if (x.srvPct < 75) bad.push(`Syöttövirheitä ${x.srvErr}: tavoite alle 20 %`);
+    if (x.ace / x.srv >= .15) good.push(`${x.ace} ässää, ${Math.round(x.ace / x.srv * 100)} % syötöistä`);
+  }
+  if (x.rec >= 8) {
+    const er = Math.round(x.recErr / x.rec * 100);
+    if (x.recPct >= 50) good.push(`Hyviä vastaanottoja ${x.recPct} %`); else bad.push(`Hyviä vastaanottoja ${x.recPct} %: tavoite 50 %`);
+    if (er >= 20) bad.push(`Vastaanottovirheitä ${er} %: tavoite alle 15 %`); else if (er < 10) good.push(`Vain ${er} % vastaanottovirheitä`);
+  }
+  if (x.attIn > 0 && x.attPct != null) { if (x.attPct >= 30) good.push(`Hyökkäystehokkuus ${x.attPct} %`); else if (x.attPct < 15) bad.push(`Hyökkäystehokkuus ${x.attPct} %`); }
+  else if (x.pt > 0 && x.err / x.pt >= .5) bad.push(`Hyökkäysvirheitä ${x.err}, pisteitä ${x.pt}`);
+  if (x.blk >= 3) good.push(`${x.blk} torjuntapistettä`);
+  if (x.net >= 3) bad.push(`${x.net} verkkovirhettä`);
+  if (!good.length) good.push('Tilastoa kertyy lisää seuraavissa peleissä');
+  return { good: good.slice(0, 2), bad: bad.slice(0, 2) };
+}
+async function teamImage(d) {
+  const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1350; const x = cv.getContext('2d'); const logo = await loadLogo();
+  x.fillStyle = IC.bg; x.fillRect(0, 0, 1080, 1350);
+  imgHead(x, logo, 'JOUKKUETILASTOT', d.title, d.sub);
+  const c = calc(d.tot), er = c.rec ? Math.round(c.recErr / c.rec * 100) : null;
+  const tile = (a, b, label, val, col, l1, l2) => {
+    x.fillStyle = '#fff'; rrect(x, a, b, 486, 260, 26); x.fill(); x.fillStyle = col; rrect(x, a, b, 14, 260, 7); x.fill();
+    txt(x, label, a + 42, b + 52, 25, 800, IC.mut); txt(x, val, a + 42, b + 164, 118, 800, col, 'left', 410);
+    txt(x, l1, a + 42, b + 210, 29, 600, IC.ink, 'left', 430); txt(x, l2, a + 42, b + 244, 26, 500, IC.mut, 'left', 430);
+  };
+  tile(48, 340, 'SYÖTTÖ ILMAN VIRHETTÄ', c.srvPct == null ? '–' : c.srvPct + ' %', toneCol(c.srvPct, 80, 70), `${c.ace} ässää · ${c.srvErr} virhettä`, `${c.srv} syöttöä`);
+  tile(546, 340, 'VASTAANOTTO, HYVÄT', c.recPct == null ? '–' : c.recPct + ' %', toneCol(c.recPct, 50, 35), er == null ? '' : `virheitä ${er} % (${c.recErr}/${c.rec})`, `${c.rec} vastaanottoa`);
+  tile(48, 630, 'HYÖKKÄYSPISTEET', String(c.pt), IC.pur, `${c.err} hyökkäysvirhettä`, c.attIn > 0 && c.attPct != null ? `tehokkuus ${c.attPct} %` : `${c.pts} pistettä yhteensä`);
+  tile(546, 630, 'TORJUNTAPISTEET', String(c.blk), IC.pur, `${c.blkSoft} vaimennusta`, `${c.net} verkkovirhettä`);
+  let y = 930;
+  const bars = (d.bars || []).filter(b => b.v != null);
+  if (bars.length) {
+    txt(x, d.barsTitle, 48, y + 32, 27, 800, IC.mut);
+    const n = bars.length, gap = 24, bw = Math.min(110, (984 - gap * (n - 1)) / n), tw = bw * n + gap * (n - 1), x0 = 48 + (984 - tw) / 2, base = y + 150, mh = 90;
+    bars.forEach((b, i) => {
+      const h = Math.max(6, mh * b.v / 100), bx = x0 + i * (bw + gap);
+      x.fillStyle = toneCol(b.v, 50, 35); rrect(x, bx, base - h, bw, h, 10); x.fill();
+      txt(x, b.v + ' %', bx + bw / 2, base - h - 10, 26, 800, IC.ink, 'center'); txt(x, b.l, bx + bw / 2, base + 30, 24, 600, IC.mut, 'center', bw + gap);
+    });
+    y += 200;
+  }
+  const ins = imgInsights(c), colW = 470;
+  const block = (a, title, col, list) => {
+    x.fillStyle = col; x.beginPath(); x.arc(a + 12, y + 24, 12, 0, 7); x.fill(); txt(x, title, a + 36, y + 34, 30, 800, IC.ink);
+    let yy = y + 78;
+    for (const s of list) for (const l of wrapLines(x, s, 27, 500, colW - 10)) { txt(x, l, a, yy, 27, 500, IC.ink); yy += 34; }
+    if (!list.length) txt(x, 'Ei erityistä huomioitavaa', a, yy, 27, 500, IC.mut);
+  };
+  block(48, 'Hyvää', IC.ok, ins.good); block(562, 'Kehitettävää', IC.mid, ins.bad);
+  txt(x, 'JyväsLentis · Pelitilastot', 540, 1330, 24, 600, IC.mut, 'center');
+  return cv;
+}
+const shortName = p => `${p.num ? '#' + p.num + ' ' : ''}${surname(p.name)}`;
+function boardsOf(rows, minN) {
+  const R = rows.map(r => ({ p: r.p, x: calc(r.c) }));
+  const top = (list, key, fmt, sub) => list.sort((a, b) => key(b) - key(a) || b.x.pts - a.x.pts).slice(0, 3).map(r => ({ p: r.p, v: fmt(r), sub: sub(r) }));
+  return [
+    { t: 'Eniten pisteitä', n: 'hyökkäys + ässät + torjunnat', rows: top(R.filter(r => r.x.pts > 0), r => r.x.pts, r => r.x.pts + ' p', r => `${r.x.pt} hyök. · ${r.x.ace} ässää · ${r.x.blk} torj.`) },
+    { t: 'Parhaat vastaanottajat', n: `hyvien osuus, väh. ${minN} vastaanottoa`, rows: top(R.filter(r => r.x.rec >= minN), r => r.x.recPct, r => r.x.recPct + ' %', r => `${r.x.recGood}/${r.x.rec} hyvää`) },
+    { t: 'Parhaat syöttäjät', n: `ilman virhettä, väh. ${minN} syöttöä`, rows: top(R.filter(r => r.x.srv >= minN), r => r.x.srvPct * 100 + r.x.ace, r => r.x.srvPct + ' %', r => `${r.x.ace} ässää · ${r.x.srvErr} virhettä`) },
+    { t: 'Parhaat torjujat', n: 'torjuntapisteet', rows: top(R.filter(r => r.x.blk > 0), r => r.x.blk, r => r.x.blk + ' kpl', r => `${r.x.blkSoft} vaimennusta`) }
+  ];
+}
+const boardsHtml = bs => `<div class="boards">${bs.map(b => `<div class="bd"><h3>${b.t}</h3>${b.rows.length ? `<ol>${b.rows.map((r, i) => `<li><span class="mut">${i + 1}.</span><b>${esc(shortName(r.p))}</b><span class="v">${r.v}</span></li>`).join('')}</ol>` : '<div class="mut small">Ei vielä tarpeeksi tilastoa</div>'}</div>`).join('')}</div>`;
+async function playersImage(d) {
+  const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1350; const x = cv.getContext('2d'); const logo = await loadLogo();
+  x.fillStyle = IC.bg; x.fillRect(0, 0, 1080, 1350);
+  imgHead(x, logo, 'PELAAJAT', d.title, d.sub);
+  boardsOf(d.rows, d.minN).forEach((b, k) => {
+    const y = 330 + k * 245;
+    x.fillStyle = '#fff'; rrect(x, 48, y, 984, 235, 26); x.fill();
+    txt(x, b.t.toUpperCase(), 80, y + 50, 26, 800, IC.pur); txt(x, b.n, 1000, y + 50, 21, 500, IC.mut, 'right', 560);
+    if (!b.rows.length) { txt(x, 'Ei vielä tarpeeksi tilastoa', 80, y + 140, 28, 500, IC.mut); return; }
+    b.rows.forEach((r, i) => {
+      const x0 = 48 + 328 * i + 32;
+      x.fillStyle = i === 0 ? IC.cy : '#c9bfe0'; x.beginPath(); x.arc(x0 + 30, y + 140, 30, 0, 7); x.fill();
+      txt(x, i + 1, x0 + 30, y + 152, 34, 800, i === 0 ? '#fff' : IC.dpur, 'center');
+      txt(x, shortName(r.p), x0 + 76, y + 126, 30, 800, IC.ink, 'left', 215);
+      txt(x, r.v, x0 + 76, y + 176, 44, 800, i === 0 ? IC.pur : IC.ink, 'left', 215);
+      txt(x, r.sub, x0 + 76, y + 210, 19, 500, IC.mut, 'left', 200);
+    });
+  });
+  txt(x, 'JyväsLentis · Pelitilastot', 540, 1332, 24, 600, IC.mut, 'center');
+  return cv;
+}
+const sumAll = o => Object.values(o || {}).reduce((a, c) => addC(a, c), {});
+function imgData() {
+  if (S.view === 'season') {
+    const { team, rows } = seasonData(); let tot = {}; rows.forEach(r => { tot = addC(tot, r.c); });
+    const gs = [...S.seasonGames].sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(g => ({ g, c: calc(sumAll(g.tot)) })).filter(o => o.c.rec >= 5).slice(-8);
+    const lab = g => { const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(g.date || ''); return m ? `${+m[2]}.${+m[1]}.` : ''; };
+    return { rows, tot, minN: 10, title: team?.name || 'Kausi', sub: `Kausi · ${S.seasonGames.length} peliä`, bars: gs.map(o => ({ l: lab(o.g), v: o.c.recPct })), barsTitle: 'HYVÄ VASTAANOTTO % PELEITTÄIN', fname: `${team?.name || 'kausi'}_kausi` };
+  }
+  const g = S.game, team = S.teams.find(t => t.id === g.teamId), rows = statRows(team, g.tot || {}); let tot = {}; rows.forEach(r => { tot = addC(tot, r.c); });
+  const bars = Object.keys(g.sets || {}).sort().map(k => { const c = calc(sumAll(g.sets[k])); return { l: 'Erä ' + k.slice(1), v: c.rec >= 3 ? c.recPct : null }; });
+  return { rows, tot, minN: 4, title: g.home && g.away ? `${g.home} – ${g.away}` : `${team?.name || ''} – ${g.opponent || ''}`, sub: [fmtDate(g.date), resTxt(g)].filter(Boolean).join(' · '), bars, barsTitle: 'HYVÄ VASTAANOTTO % ERITTÄIN', fname: `${team?.name || 'peli'}_${g.opponent || ''}_${g.date || ''}` };
+}
+async function shareCanvas(cv, name) {
+  const blob = await new Promise(r => cv.toBlob(r, 'image/png')); const fn = name.replace(/[^\wåäöÅÄÖ.-]+/g, '_');
+  const file = new File([blob], fn + '.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: name }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  const url = URL.createObjectURL(blob);
+  openModal(`<h3>Kuva valmis</h3><p class="mut small">Pidä kuvaa pohjassa ja tallenna se, tai paina Lataa. Jaa sitten WhatsAppissa.</p><img src="${url}" alt="" style="width:100%;border-radius:10px;border:1px solid var(--line)"><div class="btns"><button class="btn" data-act="close">Sulje</button><a class="btn pri" href="${url}" download="${fn}.png" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Lataa</a></div>`);
+}
+const imgBtns = () => `<div class="imgrow"><button class="btn" data-act="img-team">Kuva: joukkuetilastot</button><button class="btn" data-act="img-players">Kuva: pelaajat</button></div>`;
+act['img-team'] = async () => { const d = imgData(); toast('Tehdään kuvaa…', '', 900); await shareCanvas(await teamImage(d), d.fname + '_joukkue'); };
+act['img-players'] = async () => { const d = imgData(); toast('Tehdään kuvaa…', '', 900); await shareCanvas(await playersImage(d), d.fname + '_pelaajat'); };
+
+/* =========================================================
    Kausitilastot
    ========================================================= */
 function mountSeason(tid) {
@@ -831,7 +1006,7 @@ function updateSeason() {
   if (S.view !== 'season') return;
   const { team, rows, gp } = seasonData();
   app.innerHTML = `<div class="page"><div class="top"><button class="ib" data-act="home">←</button><div class="ttl">Kausi – ${esc(team?.name || '')}<span class="sub">${S.seasonGames.length} peliä</span></div><button class="ib" data-act="season-csv" aria-label="CSV">⬇</button></div>
-    ${statTable(rows, { games: gp })}</div>`;
+    ${imgBtns()}${boardsHtml(boardsOf(rows, 10))}<h2 style="padding:0 12px;margin-bottom:0">Kaikki pelaajat</h2><div class="note" style="margin-top:2px">Napauta sarakeotsikkoa (Pist., Ässä, %, Torjunta…) järjestääksesi pelaajat.</div>${statTable(rows, { games: gp })}</div>`;
 }
 act['season-csv'] = () => { const { team, rows, gp } = seasonData(); downloadCSV(`${team?.name}_kausi`, rows, gp); };
 
@@ -842,6 +1017,14 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
   const fn = act[el.dataset.act]; if (fn) { e.preventDefault(); fn(el, e); }
 });
+function isStandalone() { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); S.installEv = e; });
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+act.install = async () => {
+  if (S.installEv) { const e = S.installEv; S.installEv = null; e.prompt(); return; }
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  openModal(`<h3>Asenna kotivalikkoon</h3><p>${ios ? 'Avaa sivu Safarilla, napauta alareunan <b>Jaa</b>-kuvaketta (neliö ja nuoli ylös) ja valitse <b>Lisää Koti-valikkoon</b>.' : 'Avaa selaimen valikko (⋮) ja valitse <b>Asenna sovellus</b> tai <b>Lisää aloitusnäytölle</b>.'}</p><p class="mut small">Sovellus aukeaa sen jälkeen omasta kuvakkeestaan koko ruudulla.</p><div class="btns"><button class="btn pri" data-act="close">Selvä</button></div>`);
+};
 (async function boot() {
   const code = window.SPACE_CODE || 'jyle-kausi-2026';
   try { await initBackend(code); enter(code); }
