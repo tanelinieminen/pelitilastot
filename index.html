@@ -148,7 +148,7 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .sv{background:transparent;display:flex;align-items:center;gap:5px;min-width:64px;justify-content:center;font-size:21px;font-weight:800;padding:0 2px;height:36px}
 .sv i{font-style:normal;opacity:.45;font-weight:600}
 .lbtns .btn{padding:4px 9px;font-size:13px}
-.imgrow{display:flex;gap:8px;padding:8px 10px 4px}.imgrow .btn{flex:1;min-height:42px;font-size:14px;padding:6px 8px}
+.imgrow{display:flex;flex-wrap:wrap;gap:8px;padding:8px 10px 4px}.imgrow .btn{flex:1 1 30%;min-height:42px;font-size:14px;padding:6px 8px}
 .boards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:8px 10px 0}
 .bd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .bd h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
@@ -1119,7 +1119,7 @@ async function shareCanvas(cv, name) {
   const url = URL.createObjectURL(blob);
   openModal(`<h3>Kuva valmis</h3><p class="mut small">Pidä kuvaa pohjassa ja tallenna se, tai paina Lataa. Jaa sitten WhatsAppissa.</p><img src="${url}" alt="" style="width:100%;border-radius:10px;border:1px solid var(--line)"><div class="btns"><button class="btn" data-act="close">Sulje</button><a class="btn pri" href="${url}" download="${fn}.png" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Lataa</a></div>`);
 }
-const imgBtns = () => `<div class="imgrow"><button class="btn" data-act="img-team">Kuva: joukkue</button><button class="btn" data-act="img-players">Kuva: pelaajat</button><button class="btn" data-act="img-tour">Kuva: turnaus</button></div>`;
+const imgBtns = () => `<div class="imgrow"><button class="btn" data-act="img-team">Kuva: joukkue</button><button class="btn" data-act="img-players">Kuva: pelaajat</button><button class="btn" data-act="img-tour" data-m="feed">Kuva: turnaus</button><button class="btn" data-act="img-tour" data-m="story">Instagram story</button></div>`;
 act['img-team'] = async () => { const d = imgData(); toast('Tehdään kuvaa…', '', 900); await shareCanvas(await teamImage(d), d.fname + '_joukkue'); };
 act['img-players'] = async () => { const d = imgData(); toast('Tehdään kuvaa…', '', 900); await shareCanvas(await playersImage(d), d.fname + '_pelaajat'); };
 
@@ -1181,6 +1181,54 @@ async function tourImage(d) {
   txt(x, 'JyväsLentis · Pelitilastot', 540, 1330, 24, 600, IC.mut, 'center');
   return cv;
 }
+
+async function storyImage(d) {
+  const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d'); const logo = await loadLogo();
+  const g = x.createLinearGradient(0, 0, W * .6, H); g.addColorStop(0, IC.dpur); g.addColorStop(.55, IC.pur); g.addColorStop(1, '#2a1250'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // koriste: himmeät renkaat ja cyan-viiva
+  x.strokeStyle = 'rgba(0,169,221,.16)'; x.lineWidth = 46; x.beginPath(); x.arc(W + 40, 560, 330, 0, 7); x.stroke();
+  x.strokeStyle = 'rgba(255,255,255,.07)'; x.lineWidth = 34; x.beginPath(); x.arc(-60, 1500, 360, 0, 7); x.stroke();
+  x.fillStyle = IC.cy; x.fillRect(0, H - 150, W, 12);
+  // ylä- ja alareunan 250 px jää Instagramin omien palkkien alle: sisältö 260–1660
+  if (logo) { const h = 150, w = h * logo.width / logo.height; x.drawImage(logo, 60, 260, w, h); }
+  txt(x, 'TURNAUS', 1020, 330, 34, 800, IC.cy, 'right');
+  txt(x, dayLabel(d.date), 1020, 376, 30, 600, 'rgba(255,255,255,.85)', 'right');
+  txt(x, d.team?.name || '', 60, 520, 84, 800, '#fff', 'left', 960);
+  txt(x, [d.venue, `${d.n} ${d.n === 1 ? 'ottelu' : 'ottelua'}`].filter(Boolean).join(' · '), 60, 575, 30, 500, 'rgba(255,255,255,.85)', 'left', 960);
+  if (d.w + d.l) {
+    x.fillStyle = IC.cy; rrect(x, 60, 605, 330, 58, 29); x.fill();
+    txt(x, `${d.w} ${d.w === 1 ? 'voitto' : 'voittoa'} · ${d.l} ${d.l === 1 ? 'tappio' : 'tappiota'}`, 225, 645, 28, 800, IC.dpur, 'center', 310);
+  }
+  // ottelut
+  const top = 700, n = Math.max(1, d.res.length), avail = 1130 - top, rh = Math.min(128, avail / n), sc = Math.min(1.2, rh / 100);
+  d.res.forEach((o, i) => {
+    const y = top + i * rh, h = rh - 14, col = o.win === 1 ? IC.ok : o.win === -1 ? IC.bad : IC.mut;
+    x.fillStyle = 'rgba(255,255,255,.96)'; rrect(x, 60, y, 960, h, 22); x.fill(); x.fillStyle = col; rrect(x, 60, y, 14, h, 7); x.fill();
+    txt(x, o.opp, 100, y + h / 2 - 2 * sc, Math.round(34 * sc), 800, IC.ink, 'left', 560);
+    txt(x, [o.time, o.r.any ? o.r.parts.join(', ') : ''].filter(Boolean).join(' · '), 100, y + h / 2 + 34 * sc, Math.round(24 * sc), 500, IC.mut, 'left', 600);
+    txt(x, o.r.any ? `${o.r.w}–${o.r.l}` : '–', 992, y + h / 2 + 22 * sc, Math.round(66 * sc), 800, col, 'right', 280);
+  });
+  if (!d.res.length) txt(x, 'Ei otteluita', 100, top + 60, 30, 500, '#fff');
+  // top 3 -taulut
+  const by = 1160, bh = 490, gap = 18, bw = (960 - 2 * gap) / 3;
+  d.boards.forEach((b, k) => {
+    const bx = 60 + k * (bw + gap);
+    x.fillStyle = 'rgba(255,255,255,.96)'; rrect(x, bx, by, bw, bh, 26); x.fill();
+    x.fillStyle = IC.cy; rrect(x, bx, by, bw, 10, 5); x.fill();
+    txt(x, b.t.toUpperCase(), bx + 22, by + 54, 22, 800, IC.pur, 'left', bw - 36);
+    if (!b.rows.length) { txt(x, '–', bx + 22, by + 150, 40, 700, IC.mut); return; }
+    b.rows.forEach((r, i) => {
+      const y = by + 84 + i * 134;
+      x.fillStyle = i === 0 ? IC.cy : '#c9bfe0'; x.beginPath(); x.arc(bx + 40, y + 24, 18, 0, 7); x.fill();
+      txt(x, i + 1, bx + 40, y + 32, 22, 800, i === 0 ? '#fff' : IC.dpur, 'center');
+      txt(x, '#' + (r.p.num || ''), bx + 70, y + 32, 24, 800, IC.mut, 'left', bw - 90);
+      txt(x, surname(r.p.name), bx + 22, y + 74, 28, 800, IC.ink, 'left', bw - 36);
+      txt(x, r.v, bx + 22, y + 118, 44, 800, i === 0 ? IC.pur : IC.ink, 'left', bw - 36);
+    });
+  });
+  txt(x, 'JyväsLentis · Pelitilastot', 540, 1740, 26, 600, 'rgba(255,255,255,.75)', 'center');
+  return cv;
+}
 function tourGames(teamId) {
   return new Promise(res => {
     if (S.view === 'season' && S.seasonTeam === teamId && S.seasonGames.length) return res(S.seasonGames);
@@ -1188,21 +1236,22 @@ function tourGames(teamId) {
     un = backend.watchAllGames(teamId, gs => { setTimeout(() => fin(gs), 0); }); setTimeout(() => fin([]), 6000);
   });
 }
-async function tourMake(teamId, date, games) {
+async function tourMake(teamId, date, games, mode) {
   const d = tourData(teamId, date, games); if (!d.n) { toast('Päivälle ei ole pelejä', 'bad', 1800); return; }
-  toast('Tehdään kuvaa…', '', 900); await shareCanvas(await tourImage(d), d.fname);
+  toast('Tehdään kuvaa…', '', 900); const story = mode === 'story'; await shareCanvas(await (story ? storyImage(d) : tourImage(d)), d.fname + (story ? '_story' : ''));
 }
-act['img-tour'] = async () => {
+act['img-tour'] = async el => {
+  const mode = el?.dataset?.m || 'feed'; S.tourMode = mode;
   const teamId = S.view === 'game' ? S.game.teamId : S.seasonTeam, games = await tourGames(teamId);
   const days = {}; for (const g of games) if (g.date && (g.finished || g.n > 0)) (days[g.date] ||= []).push(g);
   const dates = Object.keys(days).sort().reverse();
   if (!dates.length) { toast('Ei pelattuja otteluita', 'bad', 1800); return; }
   S.tourGames = games; S.tourTeam = teamId;
   const pre = S.view === 'game' && days[S.game.date] ? S.game.date : null;
-  if (pre || dates.length === 1) return tourMake(teamId, pre || dates[0], games);
+  if (pre || dates.length === 1) return tourMake(teamId, pre || dates[0], games, mode);
   openModal(`<h3>Valitse turnauspäivä</h3><div class="chips" style="flex-direction:column;align-items:stretch">${dates.map(dt => `<button class="chip" style="text-align:left;border-radius:14px" data-act="tour-pick" data-d="${dt}"><b>${dayLabel(dt)}</b> · ${days[dt].length} ${days[dt].length === 1 ? 'ottelu' : 'ottelua'}<div class="small mut" style="font-weight:500">${days[dt].sort((a, b) => (a.time || '').localeCompare(b.time || '')).map(g => esc((g.home && g.away ? (isOwn(g.home) ? g.away : g.home) : g.opponent) || '')).join(', ')}</div></button>`).join('')}</div><div class="btns"><button class="btn" data-act="close">Peruuta</button></div>`);
 };
-act['tour-pick'] = el => { closeModal(); tourMake(S.tourTeam, el.dataset.d, S.tourGames); };
+act['tour-pick'] = el => { closeModal(); tourMake(S.tourTeam, el.dataset.d, S.tourGames, S.tourMode); };
 
 /* =========================================================
    Kausitilastot
