@@ -116,6 +116,16 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .acts.off .ab{opacity:.45}
 @media (min-width:820px){.gbody{flex-direction:row}.acts{width:420px;flex:none;border-top:0;border-left:1px solid var(--line);overflow:auto}.ab{height:72px;font-size:18px}.pgrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));grid-auto-rows:auto;flex:none;align-content:start;container-type:normal;min-height:0}.pgrid.dense .pc i{display:block}.pc{min-height:76px}.pc small{display:block}.pc span{font-size:14px}.pc b{font-size:26px}}
 @media (min-width:820px) and (max-height:520px){.gscreen .pgrid.pgrid{grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));grid-auto-rows:minmax(0,1fr);flex:1 1 0;min-height:calc(var(--rows,3) * 44px);container-type:size;align-content:stretch}.gscreen .pc{min-height:0}.gscreen .pc small{display:none}.gscreen .pgrid.dense .pc i{display:none}.gscreen .pc b{font-size:clamp(18px,calc(100cqh / var(--rows,3) * .40),28px)}.gscreen .pc span{font-size:clamp(11px,calc(100cqh / var(--rows,3) * .24),var(--sp,15px))}}
+/* kuusikkonäkymä: passari+hakkuri / YP+libero / keskitorjujat, korttien koko skaalautuu tilaan */
+.lbtns{display:flex;gap:6px}
+.chip small{font-size:11px;opacity:.7;margin-left:4px;font-weight:600}
+.court{display:flex;flex-direction:column;gap:8px;padding:8px;flex:1 1 0;min-height:200px;container-type:size}
+.crow{display:flex;justify-content:center;gap:8px;flex:1 1 0;min-height:0}
+.court .pc{flex:1 1 0;min-width:0;max-width:34%;max-height:none;min-height:0}
+.court .pc b{font-size:clamp(20px,calc(100cqh / 3 * .44),42px)}
+.court .pc span{font-size:clamp(12px,calc(100cqh / 3 * .21),20px)}
+.court .pc small{display:block;font-size:clamp(10px,calc(100cqh / 3 * .15),13px)}
+.court .pc i{display:none}
 /* stats */
 .tw{overflow:auto;padding:8px}
 table.st{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -158,6 +168,8 @@ const fmtDate = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); retu
 const num = p => parseInt(p.num, 10);
 const byNum = (a, b) => (num(a) || 999) - (num(b) || 999) || a.name.localeCompare(b.name, 'fi');
 const surname = n => (n || '').trim().split(/\s+/)[0] || '';
+const POSN = { P: 'Passari', H: 'Hakkuri', Y: 'YP', K: 'Keskitorjuja', L: 'Libero' };
+const WSTEPS = [['P', 'Passari', 1, 1], ['H', 'Hakkuri', 1, 1], ['Y', 'Yleispelaajat (YP)', 2, 2], ['K', 'Keskitorjujat', 2, 2], ['L', 'Libero (1–2)', 1, 2]];
 const firstname = n => (n || '').trim().split(/\s+/).slice(1).join(' ');
 function setPath(o, path, val) { const k = path.split('.'); let c = o; for (const x of k.slice(0, -1)) c = (c[x] ??= {}); c[k.at(-1)] = val; }
 function resInfo(g) {
@@ -593,6 +605,8 @@ function updateGame() {
     const ps = (team?.players || []).filter(p => (!p.hidden && !(g.absent || []).includes(p.id)) || act2.has(p.id)).sort(byNum);
     const roster = (team?.players || []).filter(p => !p.hidden), here = roster.filter(p => !(g.absent || []).includes(p.id)).length;
     const gc = ps.length <= 6 ? 3 : ps.length <= 16 ? 4 : 5, gr = Math.max(1, Math.ceil(ps.length / gc));
+    const posd = g.pos || {}, crt = roster.filter(p => posd[p.id] && !(g.absent || []).includes(p.id));
+    if (crt.length) main.innerHTML = courtHtml(g, crt, here); else
     main.innerHTML = ps.length ? `<div class="lurow"><span>Mukana <b>${here}/${roster.length}</b> pelaajaa</span><button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid c${gc}${gr >= 4 ? ' dense' : ''}" style="--cols:${gc};--rows:${gr}">${ps.map(p => {
       const c = g.tot?.[p.id], x = calc(c), meta = sumC(c) ? `S${x.srv} P${x.pt} V${x.rec}` : '';
       return `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${esc(firstname(p.name))}</small><i>${meta}</i></button>`;
@@ -622,6 +636,12 @@ function updateGame() {
   main.style.overflow = tab === 'tulos' ? 'hidden' : '';
   main.scrollTop = st;
   if (rec && tab === 'rec' && !g.lu && !(g.n > 0) && S.luShown !== g.id && !modalEl.classList.contains('open')) { S.luShown = g.id; lineupModal(); }
+}
+function courtHtml(g, crt, here) {
+  const by = r => crt.filter(p => g.pos[p.id] === r).sort(byNum);
+  const card = p => `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${POSN[g.pos[p.id]]}</small></button>`;
+  const row = a => a.length ? `<div class="crow">${a.map(card).join('')}</div>` : '';
+  return `<div class="lurow"><span>Kentällä <b>${crt.length}</b> · penkillä <b>${Math.max(0, here - crt.length)}</b></span><span class="lbtns"><button class="btn" data-act="swap">Vaihto</button><button class="btn" data-act="lineup">Kokoonpano</button></span></div><div class="court">${row([...by('P'), ...by('H')])}${row([...by('Y'), ...by('L')])}${row(by('K'))}</div>`;
 }
 const fmtT = ts => { const d = new Date(ts || Date.now()); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 function logHtml(team) {
@@ -690,7 +710,7 @@ function setMenu() {
 act['set-menu'] = setMenu;
 act['sm-prev'] = () => { setSet((S.game.set || 1) - 1); setMenu(); };
 act['sm-next'] = () => { setSet((S.game.set || 1) + 1); setMenu(); };
-act['set-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, set: n + 1 }); toast('Erä ' + n + ' päättyi', 'ok'); };
+act['set-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, set: n + 1 }); toast('Erä ' + n + ' päättyi', 'ok'); if (Object.keys(S.game.pos || {}).length) setLuModal(); };
 act['match-end'] = () => { const n = S.game.set || 1, sc = readScore(); closeModal(); S.sel = null; patchLocal({ ['res.s' + n]: { ...sc, end: Date.now() }, finished: true, end: Date.now() }); toast('Ottelu päättyi', 'ok'); };
 act.reopen = () => { closeModal(); patchLocal({ finished: false }); };
 act.claim = () => {
@@ -721,11 +741,66 @@ function lineupModal() {
     <div class="btns"><button class="btn" data-act="lineup-all">Kaikki mukana</button><button class="btn pri" data-act="lineup-done">Valmis</button></div>`);
 }
 act['lineup-all'] = () => { S.game.absent = []; backend.patchGame(S.game.id, { absent: [] }); lineupModal(); updateGame(); };
-act['lineup-done'] = () => { closeModal(); S.game.lu = true; backend.patchGame(S.game.id, { lu: true }); updateGame(); };
+act['lineup-done'] = () => { S.game.lu = true; backend.patchGame(S.game.id, { lu: true }); if (Object.keys(S.game.pos || {}).length) { closeModal(); updateGame(); } else { updateGame(); wizStart(); } };
 act.lineup = lineupModal;
 act['toggle-absent'] = el => {
   const s = new Set(S.game.absent || []); s.has(el.dataset.id) ? s.delete(el.dataset.id) : s.add(el.dataset.id);
-  S.game.absent = [...s]; backend.patchGame(S.game.id, { absent: S.game.absent }); lineupModal(); updateGame();
+  S.game.absent = [...s]; backend.patchGame(S.game.id, { absent: S.game.absent });
+  if (s.has(el.dataset.id) && S.game.pos?.[el.dataset.id]) { const np = { ...S.game.pos }; delete np[el.dataset.id]; S.game.pos = np; backend.patchGame(S.game.id, { pos: np }); if (S.sel === el.dataset.id) S.sel = null; }
+  lineupModal(); updateGame();
+};
+
+/* ---- Kuusikko: roolien valinta ottelun alussa ja vaihdot ---- */
+const presentPs = () => { const g = S.game, team = S.teams.find(t => t.id === g.teamId); return (team?.players || []).filter(p => !p.hidden && !(g.absent || []).includes(p.id)).sort(byNum); };
+const wizCnt = (w, r) => Object.values(w.pos).filter(x => x === r).length;
+function wizStart() { S.wiz = { i: 0, pos: {} }; wizModal(); }
+function wizModal() {
+  const w = S.wiz, [r, label, min, max] = WSTEPS[w.i], last = w.i === WSTEPS.length - 1, ps = presentPs();
+  const left = ps.filter(p => !w.pos[p.id]), n = wizCnt(w, r);
+  const sum = WSTEPS.map(([rr]) => { const names = ps.filter(p => w.pos[p.id] === rr).map(p => esc(surname(p.name))); return names.length ? `<b>${POSN[rr]}</b> ${names.join(', ')}` : ''; }).filter(Boolean).join(' · ');
+  openModal(`<h3>Kuusikko: ${label}</h3><p class="mut small">Valitse ${max > min ? min + '–' + max : max} pelaajaa (${n}/${max}). Muut jäävät penkille, ja vaihdon voi tehdä pelin aikana Vaihto-napista.</p>
+    <div class="chips">${left.map(p => `<button class="chip" data-act="wiz-pick" data-id="${p.id}">${esc(p.num)} ${esc(surname(p.name))}</button>`).join('') || '<span class="mut small">Ei enää valittavia</span>'}</div>
+    ${sum ? `<p class="small mut" style="margin-top:10px">${sum}</p>` : ''}
+    <div class="btns"><button class="btn" data-act="wiz-back">← Takaisin</button><button class="btn pri" data-act="wiz-next">${last ? 'Valmis' : 'Seuraava'}</button></div>
+    <button class="btn" style="width:100%;margin-top:8px" data-act="wiz-skip">Ohita (näytä kaikki pelaajat)</button>`);
+}
+function wizFinish() { const g = S.game, pos = { ...S.wiz.pos }; S.wiz = null; closeModal(); g.pos = pos; backend.patchGame(g.id, { pos }); S.sel = null; updateGame(); }
+act['wiz-pick'] = el => {
+  const w = S.wiz, [r, , , max] = WSTEPS[w.i]; w.pos[el.dataset.id] = r;
+  if (!presentPs().some(p => !w.pos[p.id])) { wizFinish(); return; }
+  if (wizCnt(w, r) >= max) { if (w.i === WSTEPS.length - 1) { wizFinish(); return; } w.i++; }
+  wizModal();
+};
+act['wiz-next'] = () => { if (S.wiz.i === WSTEPS.length - 1) wizFinish(); else { S.wiz.i++; wizModal(); } };
+act['wiz-back'] = () => {
+  const w = S.wiz, keys = Object.keys(w.pos);
+  if (!keys.length) { if (w.i > 0) w.i--; } else { const k = keys[keys.length - 1], r0 = w.pos[k]; delete w.pos[k]; w.i = WSTEPS.findIndex(s => s[0] === r0); }
+  wizModal();
+};
+act['wiz-skip'] = () => { const g = S.game; S.wiz = null; closeModal(); g.pos = {}; backend.patchGame(g.id, { pos: {} }); updateGame(); };
+act['wiz-restart'] = wizStart;
+function setLuModal() {
+  const g = S.game, pos = g.pos || {}, ps = presentPs();
+  const sum = [...'PHYLK'].map(r => { const nm = ps.filter(p => pos[p.id] === r).sort(byNum).map(p => `${esc(p.num)} ${esc(surname(p.name))}`); return nm.length ? `<div><b>${POSN[r]}</b> ${nm.join(', ')}</div>` : ''; }).join('');
+  openModal(`<h3>Erä ${g.set || 1}: aloituskokoonpano</h3><p class="mut small">Edellisen erän kokoonpano:</p><div class="small" style="margin-bottom:12px">${sum}</div><div class="btns"><button class="btn" data-act="wiz-restart">Valitse uudelleen</button><button class="btn pri" data-act="close">Sama kokoonpano</button></div>`);
+}
+function swapModal() {
+  const g = S.game, pos = g.pos || {}, ps = presentPs(), sel = S.swap, order = 'PHYLK';
+  const chip = p => `<button class="chip ${sel === p.id ? 'on' : ''}" data-act="swap-pick" data-id="${p.id}">${esc(p.num)} ${esc(surname(p.name))}${pos[p.id] ? `<small>${POSN[pos[p.id]]}</small>` : ''}</button>`;
+  const on = ps.filter(p => pos[p.id]).sort((a, b) => order.indexOf(pos[a.id]) - order.indexOf(pos[b.id]) || byNum(a, b)), bench = ps.filter(p => !pos[p.id]);
+  openModal(`<h3>Vaihto</h3><p class="mut small">${sel ? 'Valitse nyt pelaaja, jonka kanssa vaihdetaan.' : 'Valitse ensin pelaaja, joka lähtee. Valitse sitten tilalle tuleva: hän ottaa kentällä hänen paikkansa.'}</p>
+    <div class="small mut" style="margin-bottom:4px">Kentällä</div><div class="chips">${on.map(chip).join('') || '<span class="mut small">Kuusikkoa ei ole asetettu</span>'}</div>
+    <div class="small mut" style="margin:10px 0 4px">Penkillä</div><div class="chips">${bench.map(chip).join('') || '<span class="mut small">Ei vaihtopelaajia</span>'}</div>
+    <div class="btns"><button class="btn" data-act="wiz-restart">Valitse kuusikko uudelleen</button><button class="btn pri" data-act="close">Sulje</button></div>`);
+}
+act.swap = () => { S.swap = null; swapModal(); };
+act['swap-pick'] = el => {
+  const id = el.dataset.id, g = S.game;
+  if (!S.swap || S.swap === id) { S.swap = S.swap === id ? null : id; swapModal(); return; }
+  const a = S.swap, np = { ...(g.pos || {}) }, ra = np[a], rb = np[id];
+  if (!ra && !rb) { S.swap = id; swapModal(); return; }
+  delete np[a]; delete np[id]; if (rb) np[a] = rb; if (ra) np[id] = ra;
+  S.swap = null; closeModal(); g.pos = np; backend.patchGame(g.id, { pos: np }); if (S.sel && !np[S.sel]) S.sel = null; updateGame(); toast('Vaihto tehty', 'ok', 900);
 };
 
 /* =========================================================
