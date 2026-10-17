@@ -1106,7 +1106,7 @@ function imgData() {
     const { team, rows } = seasonData(); let tot = {}; rows.forEach(r => { tot = addC(tot, r.c); });
     const gs = [...S.seasonGames].sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(g => ({ g, c: calc(sumAll(g.tot)) })).filter(o => o.c.rec >= 5).slice(-8);
     const lab = g => { const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(g.date || ''); return m ? `${+m[2]}.${+m[1]}.` : ''; };
-    return { rows, tot, minN: 10, title: team?.name || 'Kausi', sub: `Kausi · ${S.seasonGames.length} peliä`, bars: gs.map(o => ({ l: lab(o.g), v: o.c.recPct })), barsTitle: 'HYVÄ VASTAANOTTO % PELEITTÄIN', fname: `${team?.name || 'kausi'}_kausi` };
+    return { rows, tot, minN: 10, title: team?.name ? team.name + '-pojat' : 'Kausi', sub: `Kausi · ${S.seasonGames.length} peliä`, bars: gs.map(o => ({ l: lab(o.g), v: o.c.recPct })), barsTitle: 'HYVÄ VASTAANOTTO % PELEITTÄIN', fname: `${team?.name || 'kausi'}_kausi` };
   }
   const g = S.game, team = S.teams.find(t => t.id === g.teamId), rows = statRows(team, g.tot || {}); let tot = {}; rows.forEach(r => { tot = addC(tot, r.c); });
   const bars = Object.keys(g.sets || {}).sort().map(k => { const c = calc(sumAll(g.sets[k])); return { l: 'Erä ' + k.slice(1), v: c.rec >= 3 ? c.recPct : null }; });
@@ -1150,7 +1150,7 @@ function tourData(teamId, date, games) {
 async function tourImage(d) {
   const cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1350; const x = cv.getContext('2d'); const logo = await loadLogo();
   x.fillStyle = IC.bg; x.fillRect(0, 0, 1080, 1350);
-  imgHead(x, logo, 'TURNAUS', `${d.team?.name || ''} · ${dayLabel(d.date)}`, [d.venue, `${d.n} ${d.n === 1 ? 'ottelu' : 'ottelua'}`, d.w + d.l ? `${d.w} ${d.w === 1 ? 'voitto' : 'voittoa'}, ${d.l} ${d.l === 1 ? 'tappio' : 'tappiota'}` : ''].filter(Boolean).join(' · '));
+  imgHead(x, logo, 'TURNAUS', `${d.team?.name ? d.team.name + '-pojat' : ''} · ${dayLabel(d.date)}`, [d.venue, `${d.n} ${d.n === 1 ? 'ottelu' : 'ottelua'}`, d.w + d.l ? `${d.w} ${d.w === 1 ? 'voitto' : 'voittoa'}, ${d.l} ${d.l === 1 ? 'tappio' : 'tappiota'}` : ''].filter(Boolean).join(' · '));
   // ottelut
   txt(x, 'OTTELUT', 48, 358, 26, 800, IC.mut);
   const top = 380, avail = 930 - top - 10, n = Math.max(1, d.res.length), rh = Math.min(150, avail / n), sc = Math.min(1.35, rh / 100);
@@ -1193,7 +1193,7 @@ async function storyImage(d) {
   if (logo) { const h = 150, w = h * logo.width / logo.height; x.drawImage(logo, 60, 260, w, h); }
   txt(x, 'TURNAUS', 1020, 330, 34, 800, IC.cy, 'right');
   txt(x, dayLabel(d.date), 1020, 376, 30, 600, 'rgba(255,255,255,.85)', 'right');
-  txt(x, d.team?.name || '', 60, 520, 84, 800, '#fff', 'left', 960);
+  txt(x, d.team?.name ? d.team.name + '-pojat' : '', 60, 520, 84, 800, '#fff', 'left', 960);
   txt(x, [d.venue, `${d.n} ${d.n === 1 ? 'ottelu' : 'ottelua'}`].filter(Boolean).join(' · '), 60, 575, 30, 500, 'rgba(255,255,255,.85)', 'left', 960);
   if (d.w + d.l) {
     x.fillStyle = IC.cy; rrect(x, 60, 605, 330, 58, 29); x.fill();
