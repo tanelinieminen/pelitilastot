@@ -155,7 +155,7 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 th.sortable{cursor:pointer;text-decoration:underline dotted}th.sorted{color:var(--pri)}
 @media (min-width:700px){.boards{grid-template-columns:repeat(4,1fr)}}
 .swtop{display:flex;gap:8px;align-items:stretch;margin-bottom:10px;position:sticky;top:-16px;z-index:2;background:var(--card);padding:6px 0}.swsum{flex:1;padding:8px 12px;border-radius:12px;background:var(--bg);font-size:14px;display:flex;align-items:center}.swtop .btn{flex:none;padding:0 16px}
-.sheet .btn[disabled]{opacity:.45}
+.sheet .btn[disabled],.chip[disabled]{opacity:.4}
 .chip small{margin-left:5px;font-size:11px;opacity:.75;font-weight:600}
 td.plk{cursor:pointer}td.plk b+span{text-decoration:underline dotted;text-underline-offset:3px}
 .pl{padding:8px 10px 24px;display:flex;flex-direction:column;gap:10px}
@@ -946,30 +946,28 @@ function swapModal() {
   if (sw.out && !court.some(p => p.id === sw.out)) sw.out = null;
   if (sw.in && !ps.some(p => p.id === sw.in)) sw.in = null;
   const outChip = p => `<button class="chip ${sw.out === p.id ? 'on' : ''}" data-act="sw-out" data-id="${p.id}">${swLab(p)}<small>${POSN[pos[p.id]]}</small></button>`;
-  const inChip = p => `<button class="chip ${sw.in === p.id ? 'on' : ''}" data-act="sw-in" data-id="${p.id}">${swLab(p)}${pos[p.id] ? `<small>${POSN[pos[p.id]]}</small>` : ''}</button>`;
+  const inChip = p => `<button class="chip ${sw.in === p.id ? 'on' : ''}" data-act="sw-in" data-id="${p.id}" ${sw.out ? '' : 'disabled'}>${swLab(p)}</button>`;
   const po = ps.find(p => p.id === sw.out), pi = ps.find(p => p.id === sw.in);
   const hist = g.posHist || [], last = hist[hist.length - 1];
-  const sum = po && pi ? `<b>${swLab(po)}</b> ${pos[pi.id] ? '⇄' : '→ penkille, tilalle'} <b>${swLab(pi)}</b>` : po ? `<b>${swLab(po)}</b> lähtee. Valitse tilalle tuleva.` : 'Valitse ensin kentältä lähtevä pelaaja.';
-  const others = court.filter(p => p.id !== sw.out);
+  const sum = po && pi ? `<b>${swLab(po)}</b> → <b>${swLab(pi)}</b>` : po ? `<b>${swLab(po)}</b> lähtee. Valitse tilalle tuleva.` : 'Valitse ensin kentältä lähtevä pelaaja.';
   openModal(`<h3>Vaihto</h3>
     <div class="swtop"><div class="swsum">${sum}</div><button class="btn pri" data-act="sw-do" ${po && pi ? '' : 'disabled'}>Tee vaihto</button></div>
     <div class="small mut" style="margin-bottom:4px">1. Lähtee kentältä</div><div class="chips">${court.map(outChip).join('') || '<span class="mut small">Kuusikkoa ei ole asetettu</span>'}</div>
-    <div class="small mut" style="margin:10px 0 4px">2. Tulee tilalle (penkiltä)</div><div class="chips">${bench.map(inChip).join('') || '<span class="mut small">Ei vaihtopelaajia</span>'}</div>
-    ${sw.out && others.length ? `<div class="small mut" style="margin:10px 0 4px">tai vaihda paikkaa kentällä olevan kanssa</div><div class="chips">${others.map(inChip).join('')}</div>` : ''}
+    <div class="small mut" style="margin:10px 0 4px">2. Tulee tilalle (penkiltä)${sw.out ? '' : ' – valitse ensin lähtijä'}</div><div class="chips">${bench.map(inChip).join('') || '<span class="mut small">Ei vaihtopelaajia</span>'}</div>
     <div class="btns"><button class="btn" data-act="sw-undo" ${last ? '' : 'disabled'}>↶ Peru vaihto${last ? ': ' + esc(last.d) : ''}</button></div>
     <p class="small mut" style="margin-top:10px">Libero pysyy liberona koko erän; roolit valitaan uudelleen seuraavan erän alussa.</p>
     <div class="btns"><button class="btn" data-act="wiz-restart">Valitse kuusikko uudelleen</button><button class="btn pri" data-act="close">Sulje</button></div>`);
 }
 act.swap = () => { S.swap = { out: null, in: null }; swapModal(); };
-act['sw-out'] = el => { const sw = S.swap || (S.swap = { out: null, in: null }); sw.out = sw.out === el.dataset.id ? null : el.dataset.id; if (sw.in === sw.out) sw.in = null; swapModal(); };
-act['sw-in'] = el => { const sw = S.swap || (S.swap = { out: null, in: null }); sw.in = sw.in === el.dataset.id ? null : el.dataset.id; swapModal(); };
+act['sw-out'] = el => { const sw = S.swap || (S.swap = { out: null, in: null }); sw.out = sw.out === el.dataset.id ? null : el.dataset.id; if (!sw.out) sw.in = null; swapModal(); };
+act['sw-in'] = el => { const sw = S.swap || (S.swap = { out: null, in: null }); if (!sw.out) return; sw.in = sw.in === el.dataset.id ? null : el.dataset.id; swapModal(); };
 act['sw-do'] = () => {
   const g = S.game, sw = S.swap; if (!sw?.out || !sw?.in) return;
   const ps = presentPs(), po = ps.find(p => p.id === sw.out), pi = ps.find(p => p.id === sw.in), np = { ...(g.pos || {}) }, ra = np[sw.out], rb = np[sw.in];
-  if (!ra || ra === 'L' || rb === 'L') { toast('Liberoa ei vaihdeta kesken erän', 'bad', 1800); return; }
+  if (!ra || ra === 'L' || rb) { toast('Liberoa ei vaihdeta kesken erän', 'bad', 1800); return; }
   const prev = { ...(g.pos || {}) };
   delete np[sw.out]; delete np[sw.in]; if (rb) np[sw.out] = rb; np[sw.in] = ra;
-  const d = `${po?.num} ${surname(po?.name)} ${rb ? '⇄' : '→'} ${pi?.num} ${surname(pi?.name)}`;
+  const d = `${po?.num} ${surname(po?.name)} → ${pi?.num} ${surname(pi?.name)}`;
   const hist = [...(g.posHist || []), { pos: prev, d, set: g.set || 1 }].slice(-10);
   S.swap = null; closeModal(); if (S.sel && !np[S.sel]) S.sel = null;
   patchLocal({ pos: np, posHist: hist }); toast('Vaihto tehty: ' + d, 'ok', 1600);
