@@ -166,14 +166,15 @@ function resInfo(g) {
 const resTxt = g => { const r = resInfo(g); return r.any ? `${r.w}–${r.l} (${r.parts.join(', ')})` : ''; };
 const normName = n => (n || '').toLowerCase().replace(/\s+/g, ' ').trim();
 
-const TYPES = ['srv_ok', 'srv_err', 'srv_ace', 'pt', 'att_in', 'err', 'blk', 'net', 'rec_good', 'rec_mid', 'rec_err'];
-const LABEL = { srv_ok: 'Syöttö onnistui', srv_err: 'Syöttövirhe', srv_ace: 'Ässä', pt: 'Hyökkäyspiste', att_in: 'Hyökkäys pelissä', err: 'Hyökkäysvirhe', blk: 'Torjunta', net: 'Verkkovirhe', rec_good: 'Vastaanotto hyvä', rec_mid: 'Vastaanotto: keskihyökkäys ei mahdollinen', rec_err: 'Vastaanottovirhe' };
-const TONE = { srv_ok: 'ok', srv_err: 'bad', srv_ace: 'ace', pt: 'ace', att_in: 'neu', err: 'bad', blk: 'ok', net: 'bad', rec_good: 'ok', rec_mid: 'mid', rec_err: 'bad' };
+const TYPES = ['srv_ok', 'srv_err', 'srv_ace', 'pt', 'att_in', 'err', 'blk', 'blk_soft', 'net', 'rec_good', 'rec_mid', 'rec_err'];
+const LABEL = { srv_ok: 'Syöttö onnistui', srv_err: 'Syöttövirhe', srv_ace: 'Ässä', pt: 'Hyökkäyspiste', att_in: 'Hyökkäys pelissä', err: 'Hyökkäysvirhe', blk: 'Torjunta', blk_soft: 'Vaimennus', net: 'Verkkovirhe', rec_good: 'Vastaanotto hyvä', rec_mid: 'Vastaanotto: keskihyökkäys ei mahdollinen', rec_err: 'Vastaanottovirhe' };
+// värit: vihreä = hyvä, keltainen/oranssi = neutraali (peli jatkuu), punainen = virhe
+const TONE = { srv_ace: 'ok', srv_ok: 'mid', srv_err: 'bad', rec_good: 'ok', rec_mid: 'mid', rec_err: 'bad', pt: 'ok', att_in: 'mid', err: 'bad', blk: 'ok', blk_soft: 'mid', net: 'bad' };
 const ACTIONS = [
-  { grp: 'Syöttö', items: [['srv_ok', 'Onnistui'], ['srv_ace', 'Ässä'], ['srv_err', 'Virhe']] },
+  { grp: 'Syöttö', items: [['srv_ace', 'Ässä'], ['srv_ok', 'Onnistui'], ['srv_err', 'Virhe']] },
   { grp: 'Vastaanotto', items: [['rec_good', 'Hyvä'], ['rec_mid', 'Keskihyökkäys ei mahdollinen'], ['rec_err', 'Virhe']] },
   { grp: 'Hyökkäys', items: [['pt', 'Piste'], ['att_in', 'Pelissä'], ['err', 'Virhe']] },
-  { grp: 'Torjunta', items: [['blk', 'Torjunta'], ['net', 'Verkkovirhe']] },
+  { grp: 'Torjunta', items: [['blk', 'Torjunta'], ['blk_soft', 'Vaimennus'], ['net', 'Verkkovirhe']] },
 ];
 
 /* =========================================================
@@ -336,7 +337,7 @@ function calc(c) {
     srvPct: srv ? Math.round((g0(c, 'srv_ok') + g0(c, 'srv_ace')) / srv * 100) : null,
     att: g0(c, 'pt') + g0(c, 'att_in') + g0(c, 'err'), attIn: g0(c, 'att_in'),
     attPct: (g0(c, 'pt') + g0(c, 'att_in') + g0(c, 'err')) ? Math.round((g0(c, 'pt') - g0(c, 'err')) / (g0(c, 'pt') + g0(c, 'att_in') + g0(c, 'err')) * 100) : null,
-    pt: g0(c, 'pt'), err: g0(c, 'err'), blk: g0(c, 'blk'), net: g0(c, 'net'),
+    pt: g0(c, 'pt'), err: g0(c, 'err'), blk: g0(c, 'blk'), blkSoft: g0(c, 'blk_soft'), net: g0(c, 'net'),
     rec, recGood: g0(c, 'rec_good'), recMid: g0(c, 'rec_mid'), recErr: g0(c, 'rec_err'),
     recPct: rec ? Math.round(g0(c, 'rec_good') / rec * 100) : null,
     // +/-: pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe)
@@ -360,21 +361,21 @@ function statTable(rows, { games } = {}) {
   const hasIn = g0(tot, 'att_in') > 0;   // Pelissä-nappi käytössä: muuten hyökkäysyritysten määrää ei tiedetä
   const cell = (c, name) => {
     const x = calc(c);
-    return `<td><b>${x.pts}</b></td><td class="${x.pm > 0 ? 'v-ok' : x.pm < 0 ? 'v-bad' : ''}"><b>${fmtPM(x.pm)}</b></td><td class="g">${x.srv}</td><td>${x.srvOk}</td><td class="${x.ace ? 'v-ace' : ''}">${x.ace}</td><td class="${x.srvErr ? 'v-bad' : ''}">${x.srvErr}</td><td>${pct(x.srvPct)}</td>
+    return `<td><b>${x.pts}</b></td><td class="${x.pm > 0 ? 'v-ok' : x.pm < 0 ? 'v-bad' : ''}"><b>${fmtPM(x.pm)}</b></td><td class="g">${x.srv}</td><td>${x.srvOk}</td><td class="${x.ace ? 'v-ok' : ''}">${x.ace}</td><td class="${x.srvErr ? 'v-bad' : ''}">${x.srvErr}</td><td>${pct(x.srvPct)}</td>
       <td class="g">${hasIn ? x.att : '–'}</td><td class="${x.pt ? 'v-ok' : ''}">${x.pt}</td><td>${hasIn ? x.attIn : '–'}</td><td class="${x.err ? 'v-bad' : ''}">${x.err}</td><td>${hasIn ? pct(x.attPct) : '–'}</td>
-      <td class="g ${x.blk ? 'v-ok' : ''}">${x.blk}</td><td class="${x.net ? 'v-bad' : ''}">${x.net}</td>
+      <td class="g ${x.blk ? 'v-ok' : ''}">${x.blk}</td><td>${x.blkSoft}</td><td class="${x.net ? 'v-bad' : ''}">${x.net}</td>
       <td class="g">${x.rec}</td><td class="${x.recGood ? 'v-ok' : ''}">${x.recGood}</td><td>${x.recMid}</td><td class="${x.recErr ? 'v-bad' : ''}">${x.recErr}</td><td>${pct(x.recPct)}</td>`;
   };
   return `<div class="tw"><table class="st"><thead>
-    <tr><th class="n" rowspan="2">Pelaaja</th>${games ? '<th rowspan="2">Pelit</th>' : ''}<th rowspan="2">Pist.</th><th rowspan="2">+/−</th><th class="g" colspan="5">Syöttö</th><th class="g" colspan="5">Hyökkäys</th><th class="g" colspan="2">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
-    <tr><th class="g">Yht</th><th>Onn.</th><th>Ässä</th><th>Virh.</th><th>%</th><th class="g">Yht</th><th>Piste</th><th>Pelissä</th><th>Virhe</th><th>Tehok.</th><th class="g">Torjunta</th><th>Verkkovirhe</th><th class="g">Yht</th><th>Hyvä</th><th>Kesk. ei mahd.</th><th>Virh.</th><th>%</th></tr></thead>
+    <tr><th class="n" rowspan="2">Pelaaja</th>${games ? '<th rowspan="2">Pelit</th>' : ''}<th rowspan="2">Pist.</th><th rowspan="2">+/−</th><th class="g" colspan="5">Syöttö</th><th class="g" colspan="5">Hyökkäys</th><th class="g" colspan="3">Torjunta / verkko</th><th class="g" colspan="5">Vastaanotto</th></tr>
+    <tr><th class="g">Yht</th><th>Onn.</th><th>Ässä</th><th>Virh.</th><th>%</th><th class="g">Yht</th><th>Piste</th><th>Pelissä</th><th>Virhe</th><th>Tehok.</th><th class="g">Torjunta</th><th>Vaimennus</th><th>Verkkovirhe</th><th class="g">Yht</th><th>Hyvä</th><th>Kesk. ei mahd.</th><th>Virh.</th><th>%</th></tr></thead>
     <tbody>${rows.map(r => `<tr><td class="n"><b>${esc(r.p.num)}</b> ${esc(r.p.name)}</td>${games ? `<td>${games[r.p.id] || 0}</td>` : ''}${cell(r.c)}</tr>`).join('')}</tbody>
     <tfoot><tr><td class="n">Yhteensä</td>${games ? '<td></td>' : ''}${cell(tot)}</tr></tfoot></table></div>
     <div class="note">Hyökkäys: Yht = piste + pelissä + virhe; Tehok. = (pisteet − virheet) / kaikki hyökkäykset (näkyy kun “Pelissä”-nappia on käytetty). Pist. = hyökkäyspisteet + ässät + torjunnat. Syöttö-% = (onnistui + ässä) / kaikki syötöt. Vastaanotto-% = hyvät / kaikki vastaanotot. “Kesk. ei mahd.” = keskihyökkäys ei mahdollinen. +/− = pisteet (hyökkäys + ässä + torjunta) miinus virheet (hyökkäysvirhe + syöttövirhe + verkkovirhe + vastaanottovirhe).</div>`;
 }
 function downloadCSV(name, rows, games) {
-  const head = ['Numero', 'Pelaaja', ...(games ? ['Pelit'] : []), 'Pisteet', '+/-', 'Syötöt', 'Onnistui', 'Syöttövirhe', 'Ässä', 'Syöttö-%', 'Hyökkäykset yht', 'Hyökkäyspisteet', 'Hyökkäykset pelissä', 'Hyökkäysvirheet', 'Hyökkäystehokkuus-%', 'Torjunnat', 'Verkkovirheet', 'Vastaanotot', 'Hyvä', 'Keskihyökkäys ei mahdollinen', 'Vastaanottovirhe', 'Vastaanotto-%'];
-  const lines = [head, ...rows.map(r => { const x = calc(r.c); return [r.p.num, r.p.name, ...(games ? [games[r.p.id] || 0] : []), x.pts, x.pm, x.srv, x.srvOk, x.srvErr, x.ace, x.srvPct ?? '', x.att, x.pt, x.attIn, x.err, x.attPct ?? '', x.blk, x.net, x.rec, x.recGood, x.recMid, x.recErr, x.recPct ?? '']; })];
+  const head = ['Numero', 'Pelaaja', ...(games ? ['Pelit'] : []), 'Pisteet', '+/-', 'Syötöt', 'Onnistui', 'Syöttövirhe', 'Ässä', 'Syöttö-%', 'Hyökkäykset yht', 'Hyökkäyspisteet', 'Hyökkäykset pelissä', 'Hyökkäysvirheet', 'Hyökkäystehokkuus-%', 'Torjunnat', 'Vaimennukset', 'Verkkovirheet', 'Vastaanotot', 'Hyvä', 'Keskihyökkäys ei mahdollinen', 'Vastaanottovirhe', 'Vastaanotto-%'];
+  const lines = [head, ...rows.map(r => { const x = calc(r.c); return [r.p.num, r.p.name, ...(games ? [games[r.p.id] || 0] : []), x.pts, x.pm, x.srv, x.srvOk, x.srvErr, x.ace, x.srvPct ?? '', x.att, x.pt, x.attIn, x.err, x.attPct ?? '', x.blk, x.blkSoft, x.net, x.rec, x.recGood, x.recMid, x.recErr, x.recPct ?? '']; })];
   const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   a.download = name.replace(/[^\wåäöÅÄÖ.-]+/g, '_') + '.csv'; document.body.appendChild(a); a.click(); a.remove();
