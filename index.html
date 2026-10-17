@@ -1075,7 +1075,7 @@ function boardsOf(rows, minN) {
     { t: 'Eniten pisteitä', n: 'hyökkäys + ässät + torjunnat', rows: top(R.filter(r => r.x.pts > 0), r => r.x.pts, r => r.x.pts + ' p', r => `${r.x.pt} hyök. · ${r.x.ace} ässää · ${r.x.blk} torj.`) },
     { t: 'Parhaat vastaanottajat', n: `hyvien osuus, väh. ${minN} vastaanottoa`, rows: top(R.filter(r => r.x.rec >= minN), r => r.x.recPct, r => r.x.recPct + ' %', r => `${r.x.recGood}/${r.x.rec} hyvää`) },
     { t: 'Parhaat syöttäjät', n: `ilman virhettä, väh. ${minN} syöttöä`, rows: top(R.filter(r => r.x.srv >= minN), r => r.x.srvPct * 100 + r.x.ace, r => r.x.srvPct + ' %', r => `${r.x.ace} ässää · ${r.x.srvErr} virhettä`) },
-    { t: 'Parhaat torjujat', n: 'torjuntapisteet', rows: top(R.filter(r => r.x.blk > 0), r => r.x.blk, r => r.x.blk + ' kpl', r => `${r.x.blkSoft} vaimennusta`) }
+    { t: 'Torjunnat', n: 'torjuntapisteet', rows: top(R.filter(r => r.x.blk > 0), r => r.x.blk, r => r.x.blk + ' kpl', r => `${r.x.blkSoft} vaimennusta`) }
   ];
 }
 const boardsHtml = bs => `<div class="boards">${bs.map(b => `<div class="bd"><h3>${b.t}</h3>${b.rows.length ? `<ol>${b.rows.map((r, i) => `<li><span class="mut">${i + 1}.</span><b>${esc(shortName(r.p))}</b><span class="v">${r.v}</span></li>`).join('')}</ol>` : '<div class="mut small">Ei vielä tarpeeksi tilastoa</div>'}</div>`).join('')}</div>`;
@@ -1142,7 +1142,7 @@ function tourData(teamId, date, games) {
     team, date, res, w, l, n: gs.length, venue: (gs.find(g => g.venue) || {}).venue || '',
     boards: [
       { t: 'Eniten pisteitä', rows: top(r => r.x.pts, r => r.x.pts + ' p', r => `${r.x.pt} hyök. · ${r.x.ace} ässää · ${r.x.blk} torj.`) },
-      { t: 'Torjujat', rows: top(r => r.x.blk, r => r.x.blk + ' kpl', r => `${r.x.blkSoft} vaimennusta`) },
+      { t: 'Torjunnat', rows: top(r => r.x.blk, r => r.x.blk + ' kpl', r => `${r.x.blkSoft} vaimennusta`) },
       { t: 'Ässäsyötöt', rows: top(r => r.x.ace, r => r.x.ace + ' kpl', r => `${r.x.srv} syöttöä`) }
     ], fname: `${team?.name || 'turnaus'}_turnaus_${date}`
   };
