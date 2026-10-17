@@ -89,12 +89,13 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 #tsframe{display:block;width:100%;height:calc(100% - 48px);border:0;background:#fff}
 .lurow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px 0;font-size:14px}
 .lurow .btn{min-height:34px;padding:4px 12px;font-size:14px}
-.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(84px,1fr);gap:8px;padding:8px;flex:1 0 auto}
-.pgrid.many{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(66px,1fr)}
-.pc{background:var(--card);border:2px solid var(--line);border-radius:14px;min-height:64px;max-height:150px;padding:4px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.15}
-.pc b{font-size:34px;font-weight:800;line-height:1}
-.pc span{font-weight:700;font-size:16px;letter-spacing:-.2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pgrid.many .pc b{font-size:28px}.pgrid.many .pc span{font-size:14px}
+/* pelaajaruudukko: kaikki pelaajat mahtuvat näkyviin ilman vieritystä, kortit skaalautuvat tilan mukaan (--cols, --rows asetetaan koodissa) */
+.pgrid{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:8px;padding:8px;flex:1 1 0;min-height:calc(var(--rows,3) * 52px);container-type:size}
+.pgrid.c4{--sp:14px}.pgrid.c5{--sp:12px}
+.pc{background:var(--card);border:2px solid var(--line);border-radius:14px;min-height:0;max-height:150px;padding:2px 4px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.15}
+.pc b{font-size:clamp(18px,calc(100cqh / var(--rows,3) * .40),34px);font-weight:800;line-height:1}
+.pc span{font-weight:700;font-size:clamp(11px,calc(100cqh / var(--rows,3) * .24),var(--sp,16px));letter-spacing:-.2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgrid.dense .pc i{display:none}
 .pc small{display:none;font-size:12px;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pc i{font-style:normal;font-size:12px;color:var(--mut);margin-top:1px;min-height:12px}
 .pc.sel{background:var(--sel);border-color:var(--sel);color:var(--bg)}
@@ -113,7 +114,8 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 .ab:active{filter:brightness(.8);transform:scale(.98)}
 .ab.ok{background:var(--ok)}.ab.bad{background:var(--bad)}.ab.mid{background:var(--mid)}.ab.ace{background:var(--ace)}.ab.neu{background:var(--neu)}
 .acts.off .ab{opacity:.45}
-@media (min-width:820px){.gbody{flex-direction:row}.acts{width:420px;flex:none;border-top:0;border-left:1px solid var(--line);overflow:auto}.ab{height:72px;font-size:18px}.pgrid,.pgrid.many{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));grid-auto-rows:auto;flex:none;align-content:start}.pc{min-height:76px}.pgrid.many .pc b{font-size:26px}.pgrid.many .pc span{font-size:14px}.pc small{display:block}.pc span{font-size:14px}.pc b{font-size:26px}}
+@media (min-width:820px){.gbody{flex-direction:row}.acts{width:420px;flex:none;border-top:0;border-left:1px solid var(--line);overflow:auto}.ab{height:72px;font-size:18px}.pgrid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));grid-auto-rows:auto;flex:none;align-content:start;container-type:normal;min-height:0}.pgrid.dense .pc i{display:block}.pc{min-height:76px}.pc small{display:block}.pc span{font-size:14px}.pc b{font-size:26px}}
+@media (min-width:820px) and (max-height:520px){.gscreen .pgrid.pgrid{grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));grid-auto-rows:minmax(0,1fr);flex:1 1 0;min-height:calc(var(--rows,3) * 44px);container-type:size;align-content:stretch}.gscreen .pc{min-height:0}.gscreen .pc small{display:none}.gscreen .pgrid.dense .pc i{display:none}.gscreen .pc b{font-size:clamp(18px,calc(100cqh / var(--rows,3) * .40),28px)}.gscreen .pc span{font-size:clamp(11px,calc(100cqh / var(--rows,3) * .24),var(--sp,15px))}}
 /* stats */
 .tw{overflow:auto;padding:8px}
 table.st{border-collapse:separate;border-spacing:0;width:100%;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -590,7 +592,8 @@ function updateGame() {
     const act2 = new Set(Object.keys(g.tot || {}).filter(pid => sumC(g.tot[pid]) > 0));
     const ps = (team?.players || []).filter(p => (!p.hidden && !(g.absent || []).includes(p.id)) || act2.has(p.id)).sort(byNum);
     const roster = (team?.players || []).filter(p => !p.hidden), here = roster.filter(p => !(g.absent || []).includes(p.id)).length;
-    main.innerHTML = ps.length ? `<div class="lurow"><span>Mukana <b>${here}/${roster.length}</b> pelaajaa</span><button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid${ps.length>12?' many':''}">${ps.map(p => {
+    const gc = ps.length <= 6 ? 3 : ps.length <= 16 ? 4 : 5, gr = Math.max(1, Math.ceil(ps.length / gc));
+    main.innerHTML = ps.length ? `<div class="lurow"><span>Mukana <b>${here}/${roster.length}</b> pelaajaa</span><button class="btn" data-act="lineup">Muuta kokoonpanoa</button></div><div class="pgrid c${gc}${gr >= 4 ? ' dense' : ''}" style="--cols:${gc};--rows:${gr}">${ps.map(p => {
       const c = g.tot?.[p.id], x = calc(c), meta = sumC(c) ? `S${x.srv} P${x.pt} V${x.rec}` : '';
       return `<button class="pc ${S.sel === p.id ? 'sel' : ''}" data-act="pick" data-id="${p.id}"><b>${esc(p.num)}</b><span>${esc(surname(p.name))}</span><small>${esc(firstname(p.name))}</small><i>${meta}</i></button>`;
     }).join('')}</div>` : `<div class="wrap mut">Ei pelaajia. Lisää pelaajat etusivun “Pelaajat”-napista tai valikon kautta valitse kokoonpano.</div>`;
