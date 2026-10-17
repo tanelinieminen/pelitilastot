@@ -15,10 +15,12 @@
 :root{--neu:#4b5a73;--bg:#f3f4f6;--card:#fff;--ink:#14181f;--mut:#5b6472;--line:#d6dae1;--pri:#5b2d8c;--acc:#00a9dd;--pri-ink:#fff;--ok:#0f7a56;--bad:#c42b2b;--mid:#a85f00;--ace:#6b3fd0;--sel:#14181f}
 @media (prefers-color-scheme:dark){:root{--neu:#5d6b86;--bg:#0e1116;--card:#181c23;--ink:#eef0f4;--mut:#9aa3b2;--line:#2c323d;--pri:#8c5bd1;--acc:#2cc4ee;--pri-ink:#fff;--ok:#1a9a70;--bad:#e0504f;--mid:#c47a10;--ace:#8a62ea;--sel:#eef0f4}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:manipulation;overscroll-behavior:none}
+html{height:100%;overflow:hidden}
+body{position:fixed;inset:0;width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:manipulation;overscroll-behavior:none}
+html,body{background:var(--bg);color:var(--ink)}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;touch-action:manipulation}
-#app{height:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+#app{position:absolute;inset:0;overflow:auto;-webkit-overflow-scrolling:touch}
 .hide{display:none!important}
 .top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:8px;padding:6px 10px;padding-top:max(8px,env(safe-area-inset-top));background:var(--card);border-bottom:1px solid var(--line)}
 .top .ttl{flex:1;min-width:0;font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -66,7 +68,7 @@ label.f{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
 /* modal */
 #modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center}
 #modal.open{display:flex}
-.sheet{background:var(--card);width:100%;max-width:640px;max-height:92dvh;overflow:auto;border-radius:18px 18px 0 0;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
 @media (min-width:700px){#modal{align-items:center}.sheet{border-radius:18px}}
 .sheet h3{margin:0 0 10px;font-size:19px}
 .sheet .btns{display:flex;gap:8px;margin-top:14px}
@@ -383,8 +385,15 @@ function toast(msg, tone = '', ms = 1300) {
   clearTimeout(toastT); toastT = setTimeout(() => { t.className = ''; }, ms);
 }
 const modalEl = $('#modal'), sheet = $('#sheet');
-function openModal(html) { sheet.innerHTML = html; modalEl.classList.add('open'); }
-function closeModal() { modalEl.classList.remove('open'); sheet.innerHTML = ''; S.draft = null; S.edit = null; }
+// iOS-asennetussa sovelluksessa näkymä voi jäädä siirtyneeksi (näppäimistö, vedot), jolloin napautukset osuvat ohi: palautetaan sijainti
+const vvFix = () => { try { if (scrollX || scrollY) scrollTo(0, 0); } catch {} };
+addEventListener('scroll', vvFix, { passive: true });
+if (window.visualViewport) { visualViewport.addEventListener('scroll', vvFix); visualViewport.addEventListener('resize', vvFix); }
+document.addEventListener('focusout', () => setTimeout(vvFix, 60));
+addEventListener('pageshow', vvFix); addEventListener('orientationchange', () => setTimeout(vvFix, 300));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') vvFix(); });
+function openModal(html) { vvFix(); sheet.innerHTML = html; modalEl.classList.add('open'); }
+function closeModal() { vvFix(); modalEl.classList.remove('open'); sheet.innerHTML = ''; S.draft = null; S.edit = null; }
 modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
 function confirmModal(text, act, data = '') {
   openModal(`<h3>${esc(text)}</h3><div class="btns"><button class="btn" data-act="close">Peruuta</button><button class="btn pri" data-act="${act}" data-id="${esc(data)}">OK</button></div>`);
